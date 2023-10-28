@@ -1,6 +1,7 @@
 ﻿using Database.Migrations.Entities;
 using Microsoft.EntityFrameworkCore;
 using LoveLetter.Core.Constants;
+using System.Data;
 
 namespace Database.Migrations.Configuration
 {
@@ -12,7 +13,15 @@ namespace Database.Migrations.Configuration
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            base.OnConfiguring(optionsBuilder);
+            var connectionString = 
+                string.IsNullOrEmpty(ConfigurationUtils.GetRemoteConnectionString()) ? 
+                ConfigurationUtils.GetLocalConnectionString() 
+                : ConfigurationUtils.GetRemoteConnectionString();
+
+            optionsBuilder
+                .UseSqlServer(connectionString)
+                .UseValidationCheckConstraints()
+                .UseEnumCheckConstraints();
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

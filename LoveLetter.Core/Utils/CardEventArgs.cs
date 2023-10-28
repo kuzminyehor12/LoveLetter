@@ -7,11 +7,13 @@ namespace LoveLetter.Core.Utils
         private short _playerNumber;
 
         private short _cardType;
+
         public CardEventArgs(short playerNumber, short cardType)
         {
             PlayerNumber = playerNumber;
             CardType = cardType;
         }
+
         public short PlayerNumber
         {
             get { return _playerNumber; }
@@ -36,7 +38,7 @@ namespace LoveLetter.Core.Utils
                     throw new Exception();
                 }
 
-                _playerNumber = value;
+                _cardType = value;
             }
         }
     }
