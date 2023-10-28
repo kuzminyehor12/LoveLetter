@@ -1,4 +1,5 @@
-﻿using LoveLetter.Core.Entities;
+﻿using LoveLetter.Core.Constants;
+using LoveLetter.Core.Entities;
 using LoveLetter.Core.Utils;
 using LoveLetter.UI.Infrastructure;
 using Microsoft.VisualBasic;
@@ -95,7 +96,10 @@ namespace LoveLetter.UI.Forms
                 }
 
                 _updateGridViewThread = new Thread(new ParameterizedThreadStart(TrackAudit));
-                _updateGridViewThread.Start(new { Token = _cancellationTokenSource.Token, GameStateId = gameState.Id });
+                _updateGridViewThread.Start(new { _cancellationTokenSource.Token, GameStateId = gameState.Id });
+
+                PlayerNumberValue.Maximum = Constraints.MAX_PLAYER_NUMBER;
+                PlayerValueValue.Maximum = Enum.GetValues(typeof(CardType)).Length;
 
                 YourNicknameValue.Text = player.NickName;
                 YourPlayerNumberValue.Text = player.PlayerNumber.ToString();
@@ -166,6 +170,12 @@ namespace LoveLetter.UI.Forms
 
                 ApplicationState.Instance.CurrentGameState = GameState.Fetch(lobby.Id);
                 var gameState = ApplicationState.Instance.CurrentGameState;
+                player = gameState.Players.FirstOrDefault(p => p.NickName == player.NickName);
+
+                if (player is null)
+                {
+                    throw new NullReferenceException(nameof(player));
+                }
 
                 if (gameState.WinnerPlayerNumber is not null)
                 {

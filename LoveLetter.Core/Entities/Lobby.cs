@@ -1,4 +1,5 @@
 ﻿using LoveLetter.Core.Constants;
+using LoveLetter.Core.Exceptions;
 using LoveLetter.Core.Queries;
 using LoveLetter.Core.Utils;
 
@@ -41,12 +42,17 @@ namespace LoveLetter.Core.Entities
 
             if (lobby is null)
             {
-                throw new Exception();
+                throw new NullReferenceException();
             }
 
             if (string.IsNullOrEmpty(nickname))
             {
                 nickname = "Player " + lobby.Players.Count + 1;
+            }
+
+            if (lobby.Players.Count == Constraints.MAX_PLAYER_NUMBER)
+            {
+                throw new FullLobbyException();
             }
 
             lobby.Players.Add(nickname);

@@ -52,15 +52,15 @@ namespace LoveLetter.Core.Entities
         public bool InTurn(short playerNumber) =>
             TurnPlayerNumber == playerNumber;
 
-        public Card TakeCard(bool isInitial = false)
+        public Card TakeCard()
         {
             var card = Deck.Dequeue();
-            Save(Deck);
-
             var player = Players.FirstOrDefault(p => p.PlayerNumber == TurnPlayerNumber);
 
             if (player is not null)
             {
+                player.CurrentCard = card;
+                Save(Deck, Players);
                 AuditItem.Append(Id, player, nameof(TakeCard));
             }
             
@@ -92,20 +92,21 @@ namespace LoveLetter.Core.Entities
         {
             var player = Players.FirstOrDefault(p => p.PlayerNumber == TurnPlayerNumber);
 
+            if (TurnPlayerNumber == Players.Count)
+            {
+                TurnPlayerNumber = 1;
+            }
+            else
+            {
+                TurnPlayerNumber++;
+            }
+
+            ReindexPlayers();
+            Save(TurnPlayerNumber, Players);
+
             if (player is not null)
             {
                 player.CurrentCard = new Card(currentCard);
-
-                if (TurnPlayerNumber == Players.Count)
-                {
-                    TurnPlayerNumber = 1;
-                }
-                else
-                {
-                    TurnPlayerNumber++;
-                }
-
-                Save(TurnPlayerNumber, Players);
                 AuditItem.Append(Id, player, nameof(EndTurn));
             }
         }
@@ -130,5 +131,8 @@ namespace LoveLetter.Core.Entities
                 AuditItem.Append(Id, opponent, nameof(SwapCards));
             }
         }
+
+        private void ReindexPlayers() =>
+            Players.ForEach(p => p.PlayerNumber = (short)(Players.IndexOf(p) + 1));
     }
 }

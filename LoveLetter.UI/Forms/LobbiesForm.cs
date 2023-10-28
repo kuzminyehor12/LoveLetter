@@ -1,4 +1,5 @@
 ﻿using LoveLetter.Core.Entities;
+using LoveLetter.Core.Exceptions;
 using LoveLetter.UI.Infrastructure;
 using System.Data;
 using System.Threading;
@@ -18,12 +19,23 @@ namespace LoveLetter.UI.Forms
         {
             try
             {
+                var lobby = ApplicationState.Instance.CurrentLobby;
+
+                if (lobby is null)
+                {
+                    throw new NullReferenceException(nameof(lobby));
+                }
+
                 if (Guid.TryParse(LobbiesGrid.Rows[e.RowIndex].Cells[0].Value.ToString(), out var lobbyId))
                 {
-                    ApplicationState.Instance.CurrentLobby = Lobby.Join(lobbyId, NicknameValue.Text.Trim());
-                    short yourPlayerNumber = (short)ApplicationState.Instance.CurrentLobby.Players.Count;
+                    lobby = Lobby.Join(lobbyId, NicknameValue.Text.Trim());
+                    short yourPlayerNumber = (short)lobby.Players.Count;
                     JoinWaitingRoom(yourPlayerNumber);
                 }
+            }
+            catch (FullLobbyException)
+            {
+                this.ThrowIssue("Lobby is full! Try to find another one.");
             }
             catch (Exception ex)
             {

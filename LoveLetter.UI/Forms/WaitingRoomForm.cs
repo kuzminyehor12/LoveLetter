@@ -1,4 +1,5 @@
-﻿using LoveLetter.Core.Entities;
+﻿using LoveLetter.Core.Constants;
+using LoveLetter.Core.Entities;
 using LoveLetter.UI.Infrastructure;
 
 namespace LoveLetter.UI.Forms
@@ -26,7 +27,13 @@ namespace LoveLetter.UI.Forms
         {
             YourPlayerNumber = yourPlayerNumber;
             ApplicationState.Instance.CurrentPlayer = new Player(yourPlayerNumber, playerNickname);
+            ApplicationState.Instance.ApplicationEvents.OnGameStopped += ApplicationEvents_OnGameStopped;
             InitializeComponent();
+        }
+
+        private void ApplicationEvents_OnGameStopped(object? sender, EventArgs e)
+        {
+            Close();
         }
 
         private void GameStartBtn_Click(object sender, EventArgs e)
@@ -69,6 +76,78 @@ namespace LoveLetter.UI.Forms
         {
             new GameForm().Show();
             Close();
+        }
+
+        private void QuitLobbyBtn_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var lobby = ApplicationState.Instance.CurrentLobby;
+
+                if (lobby is null)
+                {
+                    throw new NullReferenceException(nameof(lobby));
+                }
+
+                lobby.Close();
+
+                if (ApplicationState.Instance.ApplicationEvents is not null)
+                {
+                    ApplicationState.Instance.ApplicationEvents.OnGameStoppedHandler(e);
+                }
+            }
+            catch (Exception ex)
+            {
+                this.ThrowError(ex);
+            }
+        }
+
+        private void WaitingRoomForm_Load(object sender, EventArgs e)
+        {
+            RefreshPlayersList();
+        }
+
+        private void RefreshPlayersList()
+        {
+            try
+            {
+                var lobby = ApplicationState.Instance.CurrentLobby;
+
+                if (lobby is null)
+                {
+                    throw new NullReferenceException(nameof(lobby));
+                }
+
+                lobby = Lobby.Fetch(lobby.Id);
+
+                if (lobby.Players.Count == Constraints.MAX_PLAYER_NUMBER)
+                {
+                    PollingTimer.Enabled = false;
+                    return;
+                }
+                else if (WaitingRoomListView.Items.Count != lobby.Players.Count)
+                {
+                    WaitingRoomListView.Items.Clear();
+                    lobby.Players.ForEach(p => WaitingRoomListView.Items.Add(p));
+                    WaitingRoomListView.Refresh();
+                }
+            }
+            catch (Exception ex)
+            {
+                this.ThrowError(ex);
+            }
+        }
+
+        private void PollingTimer_Tick(object sender, EventArgs e)
+        {
+            PollingTimer.Stop();
+            RefreshPlayersList();
+            PollingTimer.Start();
+        }
+
+        private void WaitingRoomForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            PollingTimer.Stop();
         }
     }
 }
