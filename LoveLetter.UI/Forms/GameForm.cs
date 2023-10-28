@@ -1,5 +1,6 @@
 ﻿using LoveLetter.Core.Constants;
 using LoveLetter.Core.Entities;
+using LoveLetter.Core.Exceptions;
 using LoveLetter.Core.Utils;
 using LoveLetter.UI.Infrastructure;
 using Microsoft.VisualBasic;
@@ -70,7 +71,10 @@ namespace LoveLetter.UI.Forms
 
                 var args = new CardEventArgs((short)PlayerNumberValue.Value, (short)PlayerValueValue.Value);
                 SelectedCard.Effect(cardEvents, args);
-                AuditItem.Append(gameState.Id, player, string.Join(" ", SelectedCard.CardType.ToString(), nameof(Card.Effect)));
+                AuditItem.Append(
+                    gameState.Id, player, 
+                    string.Join(" ", SelectedCard.CardType.ToString(), nameof(Card.Effect)),
+                    ApplicationState.Instance.Connection);
             }
             catch (Exception ex)
             {
@@ -130,7 +134,7 @@ namespace LoveLetter.UI.Forms
 
                 if (Guid.TryParse(JObject.FromObject(args)["GameStateId"]?.ToString() ?? null, out var gameStateId))
                 {
-                    SetDataSourceInGridView(DataGridUtils.LoadAudit(gameStateId));
+                    SetDataSourceInGridView(DataGridUtils.LoadAudit(gameStateId, ApplicationState.Instance.Connection));
                 }
             }
         }
@@ -168,7 +172,7 @@ namespace LoveLetter.UI.Forms
                     throw new NullReferenceException(nameof(player));
                 }
 
-                ApplicationState.Instance.CurrentGameState = GameState.Fetch(lobby.Id);
+                ApplicationState.Instance.CurrentGameState = GameState.Fetch(lobby.Id, ApplicationState.Instance.Connection);
                 var gameState = ApplicationState.Instance.CurrentGameState;
                 player = gameState.Players.FirstOrDefault(p => p.NickName == player.NickName);
 
@@ -335,7 +339,9 @@ namespace LoveLetter.UI.Forms
                         return;
                     }
 
-                    AuditItem.Append(gameState.Id, player, string.Join(" ", nameof(FindOpponent), opponent.PlayerNumber));
+                    AuditItem.Append(gameState.Id, player, 
+                        string.Join(" ", nameof(FindOpponent), opponent.PlayerNumber),
+                        ApplicationState.Instance.Connection);
 
                     gameState.SwapCards(player.PlayerNumber, opponent);
                 }
@@ -377,7 +383,10 @@ namespace LoveLetter.UI.Forms
                         return;
                     }
 
-                    AuditItem.Append(gameState.Id, player, string.Join(" ", nameof(FindOpponent), opponent.PlayerNumber));
+                    AuditItem.Append(
+                        gameState.Id, player, 
+                        string.Join(" ", nameof(FindOpponent), opponent.PlayerNumber),
+                        ApplicationState.Instance.Connection);
 
                     if (opponent.CurrentCard.CardType == CardType.Princess)
                     {
@@ -461,7 +470,10 @@ namespace LoveLetter.UI.Forms
                         return;
                     }
 
-                    AuditItem.Append(gameState.Id, player, string.Join(" ", nameof(FindOpponent), opponent.PlayerNumber));
+                    AuditItem.Append(
+                        gameState.Id, player, 
+                        string.Join(" ", nameof(FindOpponent), opponent.PlayerNumber), 
+                        ApplicationState.Instance.Connection);
 
                     if (InitialCard > opponent.CurrentCard)
                     {
@@ -511,7 +523,10 @@ namespace LoveLetter.UI.Forms
                         return;
                     }
 
-                    AuditItem.Append(gameState.Id, player, string.Join(" ", nameof(FindOpponent), opponent.PlayerNumber));
+                    AuditItem.Append(
+                        gameState.Id, player, 
+                        string.Join(" ", nameof(FindOpponent), opponent.PlayerNumber),
+                        ApplicationState.Instance.Connection);
 
                     this.AlertMessage($"You revealed opponents`s card. His card type is {opponent.CurrentCard}");
                 }
@@ -554,7 +569,10 @@ namespace LoveLetter.UI.Forms
                         return;
                     }
 
-                    AuditItem.Append(gameState.Id, player, string.Join(" ", nameof(FindOpponent), opponent.PlayerNumber, e.CardType));
+                    AuditItem.Append(
+                        gameState.Id, player, 
+                        string.Join(" ", nameof(FindOpponent), opponent.PlayerNumber, e.CardType), 
+                        ApplicationState.Instance.Connection);
 
                     if (e.CardType == (short)opponent.CurrentCard.CardType)
                     {

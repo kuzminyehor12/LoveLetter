@@ -28,7 +28,7 @@ namespace LoveLetter.UI.Forms
 
                 if (Guid.TryParse(LobbiesGrid.Rows[e.RowIndex].Cells[0].Value.ToString(), out var lobbyId))
                 {
-                    lobby = Lobby.Join(lobbyId, NicknameValue.Text.Trim());
+                    lobby = Lobby.Join(lobbyId, NicknameValue.Text.Trim(), ApplicationState.Instance.Connection);
                     short yourPlayerNumber = (short)lobby.Players.Count;
                     JoinWaitingRoom(yourPlayerNumber);
                 }
@@ -52,7 +52,7 @@ namespace LoveLetter.UI.Forms
         {
             try
             {
-                ApplicationState.Instance.CurrentLobby = Lobby.CreateNew(NicknameValue.Text.Trim());
+                ApplicationState.Instance.CurrentLobby = Lobby.CreateNew(NicknameValue.Text.Trim(), ApplicationState.Instance.Connection);
                 JoinWaitingRoom();
             }
             catch (Exception ex)
@@ -70,7 +70,8 @@ namespace LoveLetter.UI.Forms
         private void LobbiesForm_Load(object sender, EventArgs e)
         {
             ApplicationState.Instance.ApplicationEvents.OnGameStopped += GameForm_OnClosed;
-            LobbiesGrid.DataSource = DataGridUtils.GetLobbyDataTable();
+            ApplicationState.Instance.Connection.Open();
+            LobbiesGrid.DataSource = DataGridUtils.GetLobbyDataTable(ApplicationState.Instance.Connection);
             _updateDataGridViewThread = new Thread(new ParameterizedThreadStart(TrackLobbies));
             _updateDataGridViewThread.Start(_cancellationTokenSource.Token);
         }
@@ -82,7 +83,7 @@ namespace LoveLetter.UI.Forms
                 return;
             }
 
-            SetDataSourceInGridView(DataGridUtils.GetLobbyDataTable());
+            SetDataSourceInGridView(DataGridUtils.GetLobbyDataTable(ApplicationState.Instance.Connection));
         }
 
         private void SetDataSourceInGridView(DataTable table)
@@ -106,6 +107,8 @@ namespace LoveLetter.UI.Forms
 
         private void LobbiesForm_FormClosing(object sender, FormClosingEventArgs e)
         {
+            ApplicationState.Instance.Connection.Close();
+            ApplicationState.Instance.ApplicationEvents.OnGameStopped -= GameForm_OnClosed;
             _cancellationTokenSource.Cancel();
             _cancellationTokenSource.Dispose();
         }

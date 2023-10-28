@@ -1,16 +1,20 @@
-﻿using LoveLetter.Core.Constants;
+﻿using LoveLetter.Core.Adapters;
 using LoveLetter.Core.Queries;
-using System.ComponentModel;
+using Microsoft.Data.SqlClient;
 using System.Data;
-using System.Numerics;
+using System.IO;
 using System.Text.Json;
+using System.Xml.Serialization;
 
 namespace LoveLetter.Core.Entities
 {
     public class GameState : DomainEntity
     {
+        private ISqlDataAdapter _adapter = new GameStateSqlAdapter();
+
         public Guid Id { get; private set; }
 
+        [XmlElement("Players")]
         public List<Player> Players { get; private set; } = new List<Player>();
 
         public Deck Deck { get; private set; } = new Deck();
@@ -23,10 +27,32 @@ namespace LoveLetter.Core.Entities
 
         public DateTime? EndDate { get; private set; }
 
-        public static GameState Fetch(Guid lobbyId)
+        public GameState(SqlDataReader reader)
+        {
+            if (reader.Read())
+            {
+                var xmlSerializer = new XmlSerializer(typeof(List<Player>));
+                Id = Guid.Parse(reader[0]?.ToString() ?? string.Empty);
+                Players = xmlSerializer.Deserialize(reader.GetXmlReader(1)) as List<Player> ?? new List<Player>();
+                Deck = new Deck((reader[2].ToString() ?? string.Empty).Split(',').Select(cardType => short.Parse(cardType)));
+                TurnPlayerNumber = Convert.ToInt16(reader[3]);
+                WinnerPlayerNumber = reader.IsDBNull(4) ? null : Convert.ToInt16(reader[4]);
+                StartDate = Convert.ToDateTime(reader[5]);
+                EndDate = reader.IsDBNull(6) ? null : Convert.ToDateTime(reader[6]);
+            }
+        }
+
+        public GameState UseAdapter(ISqlDataAdapter adapter)
+        {
+            _adapter = adapter;
+            return this;
+        }
+
+        public static GameState Fetch(Guid lobbyId, SqlConnection connection)
         {
             var command = GameStateQuery.SelectById(lobbyId);
-            return new GameState();
+            var adapter = new GameStateSqlAdapter(connection);
+            return ((GameState)adapter.Populate(command)).UseAdapter(adapter);
         }
 
         public bool Save<T>(T value)
@@ -39,6 +65,7 @@ namespace LoveLetter.Core.Entities
             }
 
             var command = GameStateQuery.UpdateColumn(Id, value);
+            _adapter.SaveChanges(command);
             return true;
         }
 
@@ -46,6 +73,7 @@ namespace LoveLetter.Core.Entities
         {
             var stringValues = values.Select(v => JsonSerializer.Serialize(v)).ToArray() ?? Array.Empty<string>();
             var command = GameStateQuery.UpdateColumns(Id, stringValues);
+            _adapter.SaveChanges(command);
             return true;
         }
 
@@ -61,7 +89,7 @@ namespace LoveLetter.Core.Entities
             {
                 player.CurrentCard = card;
                 Save(Deck, Players);
-                AuditItem.Append(Id, player, nameof(TakeCard));
+                AuditItem.Append(Id, player, nameof(TakeCard), _adapter.Connection);
             }
             
             return card;
@@ -77,7 +105,7 @@ namespace LoveLetter.Core.Entities
 
             if (player is not null)
             {
-                AuditItem.Append(Id, player, nameof(Win));
+                AuditItem.Append(Id, player, nameof(Win), _adapter.Connection);
             }
         }
 
@@ -85,7 +113,7 @@ namespace LoveLetter.Core.Entities
         {
             Players.Remove(loser);
             Save(Players);
-            AuditItem.Append(Id, loser, nameof(Lose));
+            AuditItem.Append(Id, loser, nameof(Lose), _adapter.Connection);
         }
 
         public void EndTurn(Card currentCard)
@@ -107,7 +135,7 @@ namespace LoveLetter.Core.Entities
             if (player is not null)
             {
                 player.CurrentCard = new Card(currentCard);
-                AuditItem.Append(Id, player, nameof(EndTurn));
+                AuditItem.Append(Id, player, nameof(EndTurn), _adapter.Connection);
             }
         }
 
@@ -127,8 +155,8 @@ namespace LoveLetter.Core.Entities
                 currentPlayer.CurrentCard = new Card(opponent.CurrentCard);
                 opponent.CurrentCard = new Card(currentPlayerCard);
                 Save(Players);
-                AuditItem.Append(Id, currentPlayer, nameof(SwapCards));
-                AuditItem.Append(Id, opponent, nameof(SwapCards));
+                AuditItem.Append(Id, currentPlayer, nameof(SwapCards), _adapter.Connection);
+                AuditItem.Append(Id, opponent, nameof(SwapCards), _adapter.Connection);
             }
         }
 

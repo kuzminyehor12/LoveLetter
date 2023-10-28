@@ -57,7 +57,7 @@ namespace LoveLetter.UI.Forms
 
                 if (resultOk)
                 {
-                    ApplicationState.Instance.CurrentGameState = GameState.Fetch(lobby.Id);
+                    ApplicationState.Instance.CurrentGameState = GameState.Fetch(lobby.Id, ApplicationState.Instance.Connection);
                     JoinGame();
                 }
                 else
@@ -118,7 +118,7 @@ namespace LoveLetter.UI.Forms
                     throw new NullReferenceException(nameof(lobby));
                 }
 
-                lobby = Lobby.Fetch(lobby.Id);
+                lobby = Lobby.Fetch(lobby.Id, ApplicationState.Instance.Connection);
 
                 if (lobby.Players.Count == Constraints.MAX_PLAYER_NUMBER)
                 {
@@ -147,6 +147,7 @@ namespace LoveLetter.UI.Forms
 
         private void WaitingRoomForm_FormClosing(object sender, FormClosingEventArgs e)
         {
+            ApplicationState.Instance.ApplicationEvents.OnGameStopped -= ApplicationEvents_OnGameStopped;
             PollingTimer.Stop();
         }
     }

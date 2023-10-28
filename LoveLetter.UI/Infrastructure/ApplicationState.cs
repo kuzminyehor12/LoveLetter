@@ -1,5 +1,6 @@
 ﻿using LoveLetter.Core.Entities;
 using LoveLetter.Core.Utils;
+using Microsoft.Data.SqlClient;
 
 namespace LoveLetter.UI.Infrastructure
 {
@@ -12,6 +13,7 @@ namespace LoveLetter.UI.Infrastructure
             CurrentLobby = null;
             CurrentGameState = null;
             ApplicationEvents = new ApplicationEvents();
+            Connection = new SqlConnection(ConfigurationUtils.GetConnectionString());
         }
 
         public static ApplicationState Instance
@@ -36,5 +38,7 @@ namespace LoveLetter.UI.Infrastructure
         public CardEvents? CardEvents { get; set; }
 
         public ApplicationEvents ApplicationEvents { get; set; }
+
+        public SqlConnection Connection { get; }
     }
 }

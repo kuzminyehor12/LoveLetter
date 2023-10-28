@@ -7,33 +7,29 @@ namespace LoveLetter.UI.Infrastructure
 {
     public static class DataGridUtils
     {
-        public static DataTable GetLobbyDataTable()
+        public static DataTable GetLobbyDataTable(SqlConnection connection)
         {
             DataTable lobbies = new DataTable();
-            using (var connection = new SqlConnection(ConfigurationUtils.GetConnectionString()))
+
+            using (var dataAdapter = new SqlDataAdapter())
             {
-                using (var dataAdapter = new SqlDataAdapter())
-                {
-                    dataAdapter.SelectCommand = new SqlCommand(LobbyQuery.SelectAll());
-                    connection.Open();
-                    dataAdapter.Fill(lobbies);
-                }
+                dataAdapter.SelectCommand = new SqlCommand(LobbyQuery.SelectAll());
+                connection.Open();
+                dataAdapter.Fill(lobbies);
             }
 
             return lobbies;
         }
 
-        public static DataTable LoadAudit(Guid gameStateId)
+        public static DataTable LoadAudit(Guid gameStateId, SqlConnection connection)
         {
             DataTable audit = new DataTable();
-            using (var connection = new SqlConnection(ConfigurationUtils.GetConnectionString()))
+
+            using (var dataAdapter = new SqlDataAdapter())
             {
-                using (var dataAdapter = new SqlDataAdapter())
-                {
-                    dataAdapter.SelectCommand = new SqlCommand(AuditQuery.SelectAll(gameStateId));
-                    connection.Open();
-                    dataAdapter.Fill(audit);
-                }
+                dataAdapter.SelectCommand = new SqlCommand(AuditQuery.SelectAll(gameStateId));
+                connection.Open();
+                dataAdapter.Fill(audit);
             }
 
             return audit;
