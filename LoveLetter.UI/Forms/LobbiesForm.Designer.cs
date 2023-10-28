@@ -28,72 +28,75 @@
         /// </summary>
         private void InitializeComponent()
         {
-            LobbiesGrid = new DataGridView();
-            NicknameValue = new TextBox();
-            NicknameLabel = new Label();
-            CreateLobbyBtn = new Button();
-            ((System.ComponentModel.ISupportInitialize)LobbiesGrid).BeginInit();
-            SuspendLayout();
+            this.LobbiesGrid = new System.Windows.Forms.DataGridView();
+            this.NicknameValue = new System.Windows.Forms.TextBox();
+            this.NicknameLabel = new System.Windows.Forms.Label();
+            this.CreateLobbyBtn = new System.Windows.Forms.Button();
+            ((System.ComponentModel.ISupportInitialize)(this.LobbiesGrid)).BeginInit();
+            this.SuspendLayout();
             // 
             // LobbiesGrid
             // 
-            LobbiesGrid.AllowUserToAddRows = false;
-            LobbiesGrid.AllowUserToDeleteRows = false;
-            LobbiesGrid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            LobbiesGrid.Location = new Point(0, 92);
-            LobbiesGrid.Name = "LobbiesGrid";
-            LobbiesGrid.ReadOnly = true;
-            LobbiesGrid.RowHeadersWidth = 62;
-            LobbiesGrid.RowTemplate.Height = 33;
-            LobbiesGrid.Size = new Size(1048, 472);
-            LobbiesGrid.TabIndex = 0;
-            LobbiesGrid.CellContentDoubleClick += LobbiesGrid_CellContentDoubleClick;
-            LobbiesGrid.CellDoubleClick += LobbiesGrid_CellDoubleClick;
+            this.LobbiesGrid.AllowUserToAddRows = false;
+            this.LobbiesGrid.AllowUserToDeleteRows = false;
+            this.LobbiesGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.LobbiesGrid.Location = new System.Drawing.Point(0, 74);
+            this.LobbiesGrid.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.LobbiesGrid.Name = "LobbiesGrid";
+            this.LobbiesGrid.ReadOnly = true;
+            this.LobbiesGrid.RowHeadersWidth = 62;
+            this.LobbiesGrid.RowTemplate.Height = 33;
+            this.LobbiesGrid.Size = new System.Drawing.Size(838, 378);
+            this.LobbiesGrid.TabIndex = 0;
             // 
             // NicknameValue
             // 
-            NicknameValue.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point);
-            NicknameValue.Location = new Point(12, 44);
-            NicknameValue.Name = "NicknameValue";
-            NicknameValue.Size = new Size(558, 39);
-            NicknameValue.TabIndex = 1;
+            this.NicknameValue.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.NicknameValue.Location = new System.Drawing.Point(10, 35);
+            this.NicknameValue.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.NicknameValue.Name = "NicknameValue";
+            this.NicknameValue.Size = new System.Drawing.Size(447, 34);
+            this.NicknameValue.TabIndex = 1;
             // 
             // NicknameLabel
             // 
-            NicknameLabel.AutoSize = true;
-            NicknameLabel.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point);
-            NicknameLabel.Location = new Point(12, 9);
-            NicknameLabel.Name = "NicknameLabel";
-            NicknameLabel.Size = new Size(286, 32);
-            NicknameLabel.TabIndex = 2;
-            NicknameLabel.Text = "Enter nickname(optional):";
+            this.NicknameLabel.AutoSize = true;
+            this.NicknameLabel.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.NicknameLabel.Location = new System.Drawing.Point(10, 7);
+            this.NicknameLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.NicknameLabel.Name = "NicknameLabel";
+            this.NicknameLabel.Size = new System.Drawing.Size(235, 28);
+            this.NicknameLabel.TabIndex = 2;
+            this.NicknameLabel.Text = "Enter nickname(optional):";
             // 
             // CreateLobbyBtn
             // 
-            CreateLobbyBtn.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point);
-            CreateLobbyBtn.Location = new Point(694, 9);
-            CreateLobbyBtn.Name = "CreateLobbyBtn";
-            CreateLobbyBtn.Size = new Size(327, 71);
-            CreateLobbyBtn.TabIndex = 3;
-            CreateLobbyBtn.Text = "Create Lobby";
-            CreateLobbyBtn.UseVisualStyleBackColor = true;
-            CreateLobbyBtn.Click += CreateLobbyBtn_Click;
+            this.CreateLobbyBtn.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.CreateLobbyBtn.Location = new System.Drawing.Point(555, 7);
+            this.CreateLobbyBtn.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.CreateLobbyBtn.Name = "CreateLobbyBtn";
+            this.CreateLobbyBtn.Size = new System.Drawing.Size(262, 57);
+            this.CreateLobbyBtn.TabIndex = 3;
+            this.CreateLobbyBtn.Text = "Create Lobby";
+            this.CreateLobbyBtn.UseVisualStyleBackColor = true;
             // 
             // LobbiesForm
             // 
-            AutoScaleDimensions = new SizeF(10F, 25F);
-            AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1043, 559);
-            Controls.Add(CreateLobbyBtn);
-            Controls.Add(NicknameLabel);
-            Controls.Add(NicknameValue);
-            Controls.Add(LobbiesGrid);
-            Name = "LobbiesForm";
-            Text = "LobbiesForm";
-            Load += LobbiesForm_Load;
-            ((System.ComponentModel.ISupportInitialize)LobbiesGrid).EndInit();
-            ResumeLayout(false);
-            PerformLayout();
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.ClientSize = new System.Drawing.Size(834, 447);
+            this.Controls.Add(this.CreateLobbyBtn);
+            this.Controls.Add(this.NicknameLabel);
+            this.Controls.Add(this.NicknameValue);
+            this.Controls.Add(this.LobbiesGrid);
+            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.Name = "LobbiesForm";
+            this.Text = "LobbiesForm";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.LobbiesForm_FormClosing);
+            ((System.ComponentModel.ISupportInitialize)(this.LobbiesGrid)).EndInit();
+            this.ResumeLayout(false);
+            this.PerformLayout();
+
         }
 
         #endregion

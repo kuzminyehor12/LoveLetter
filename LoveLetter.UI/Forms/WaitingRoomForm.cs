@@ -34,13 +34,19 @@ namespace LoveLetter.UI.Forms
             try
             {
                 var lobby = ApplicationState.Instance.CurrentLobby;
+                var player = ApplicationState.Instance.CurrentPlayer;
 
                 if (lobby is null)
                 {
                     throw new NullReferenceException(nameof(lobby));
                 }
-                
-                var resultOk = lobby.Start();
+
+                if (player is null)
+                {
+                    throw new NullReferenceException(nameof(player));
+                }
+
+                var resultOk = lobby.Start(player.NickName);
 
                 if (resultOk)
                 {

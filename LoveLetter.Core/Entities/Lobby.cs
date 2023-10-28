@@ -1,4 +1,5 @@
-﻿using LoveLetter.Core.Queries;
+﻿using LoveLetter.Core.Constants;
+using LoveLetter.Core.Queries;
 using LoveLetter.Core.Utils;
 
 namespace LoveLetter.Core.Entities
@@ -50,6 +51,7 @@ namespace LoveLetter.Core.Entities
 
             lobby.Players.Add(nickname);
             var command = LobbyQuery.UpdatePlayers(lobbyId, lobby.Players);
+            AuditItem.Append(lobbyId, nickname, nameof(Join));
             return lobby;
         }
 
@@ -57,23 +59,26 @@ namespace LoveLetter.Core.Entities
         {
             Players.Remove(nickname);
             var command = LobbyQuery.UpdatePlayers(Id, Players);
+            AuditItem.Append(Id, nickname, nameof(Leave));
             return true;
         }
 
-        public bool Start()
+        public bool Start(string nickname)
         {
-            if (Players.Count < 2 || Players.Count > 4)
+            if (Players.Count < 2 || Players.Count > Constraints.MAX_PLAYER_NUMBER)
             {
                 return false;
             }
 
             var command = LobbyQuery.Start(Id);
+            AuditItem.Append(Id, nickname, nameof(Start));
             return true;
         }
 
         public bool Close()
         {
             var command = LobbyQuery.Close(Id);
+            AuditItem.Append(Id, nameof(Lobby), nameof(Close));
             return true;
         }
     }

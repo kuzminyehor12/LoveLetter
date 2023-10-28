@@ -12,10 +12,18 @@ namespace LoveLetter.Core.Entities
 
         public string Message { get; private set; } = string.Empty;
 
-        public bool Append(Guid gameStateId, Player player, string message)
+        public DateTime Timestamp { get; private set; }
+
+        public static bool Append(Guid gameStateId, Player player, string message)
         {
-            var playerNickname = player.NickName ?? "Player " + player.PlayerNumber;
+            var playerNickname = player.NickName;
             var command = AuditQuery.Insert(gameStateId, playerNickname, player.PlayerNumber, message);
+            return true;
+        }
+
+        public static bool Append(Guid gameStateId, string nickname, string message)
+        {
+            var command = AuditQuery.Insert(gameStateId, nickname, message);
             return true;
         }
     }

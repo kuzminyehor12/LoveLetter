@@ -1,6 +1,8 @@
 ﻿using LoveLetter.Core.Constants;
 using LoveLetter.Core.Queries;
+using System.ComponentModel;
 using System.Data;
+using System.Numerics;
 using System.Text.Json;
 
 namespace LoveLetter.Core.Entities
@@ -9,7 +11,7 @@ namespace LoveLetter.Core.Entities
     {
         public Guid Id { get; private set; }
 
-        public IEnumerable<Player> Players { get; private set; } = Enumerable.Empty<Player>();
+        public List<Player> Players { get; private set; } = new List<Player>();
 
         public Deck Deck { get; private set; } = new Deck();
 
@@ -54,14 +56,36 @@ namespace LoveLetter.Core.Entities
         {
             var card = Deck.Dequeue();
             Save(Deck);
+
+            var player = Players.FirstOrDefault(p => p.PlayerNumber == TurnPlayerNumber);
+
+            if (player is not null)
+            {
+                AuditItem.Append(Id, player, nameof(TakeCard));
+            }
+            
             return card;
         }
 
-        public void SetWinner(short winnerPlayerNumber)
+        public void Win(short winnerPlayerNumber)
         {
             WinnerPlayerNumber = winnerPlayerNumber;
             EndDate = DateTime.Now;
             Save(WinnerPlayerNumber, EndDate);
+
+            var player = Players.FirstOrDefault(p => p.PlayerNumber == WinnerPlayerNumber);
+
+            if (player is not null)
+            {
+                AuditItem.Append(Id, player, nameof(Win));
+            }
+        }
+
+        public void Lose(Player loser)
+        {
+            Players.Remove(loser);
+            Save(Players);
+            AuditItem.Append(Id, loser, nameof(Lose));
         }
 
         public void EndTurn(Card currentCard)
@@ -71,18 +95,40 @@ namespace LoveLetter.Core.Entities
             if (player is not null)
             {
                 player.CurrentCard = new Card(currentCard);
-            }
 
-            if (TurnPlayerNumber == Constraints.MAX_PLAYER_NUMBER)
-            {
-                TurnPlayerNumber = 1;
-            }
-            else
-            {
-                TurnPlayerNumber++;
-            }
+                if (TurnPlayerNumber == Players.Count)
+                {
+                    TurnPlayerNumber = 1;
+                }
+                else
+                {
+                    TurnPlayerNumber++;
+                }
 
-            Save(TurnPlayerNumber, Players);
+                Save(TurnPlayerNumber, Players);
+                AuditItem.Append(Id, player, nameof(EndTurn));
+            }
+        }
+
+        public void ResetTarget(Player currentPlayer, Player opponent)
+        {
+            var opponentsLeft = Players.Where(p => p.PlayerNumber != currentPlayer.PlayerNumber && p.PlayerNumber != opponent.PlayerNumber);
+            opponent = opponentsLeft.ElementAt(new Random().Next(0, opponentsLeft.Count()));
+        }
+
+        public void SwapCards(short currentPlayerNumber, Player opponent)
+        {
+            var currentPlayer = Players.FirstOrDefault(p => p.PlayerNumber == currentPlayerNumber);
+
+            if (currentPlayer is not null)
+            {
+                var currentPlayerCard = currentPlayer.CurrentCard;
+                currentPlayer.CurrentCard = new Card(opponent.CurrentCard);
+                opponent.CurrentCard = new Card(currentPlayerCard);
+                Save(Players);
+                AuditItem.Append(Id, currentPlayer, nameof(SwapCards));
+                AuditItem.Append(Id, opponent, nameof(SwapCards));
+            }
         }
     }
 }

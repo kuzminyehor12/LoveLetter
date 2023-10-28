@@ -15,5 +15,7 @@ namespace Database.Migrations.Entities
         public short PlayerNumber { get; set; }
 
         public string Message { get; set; } = string.Empty;
+
+        public DateTime Timestamp { get; set; }
     }
 }

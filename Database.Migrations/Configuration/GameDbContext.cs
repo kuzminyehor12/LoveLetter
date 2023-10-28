@@ -1,25 +1,16 @@
 ﻿using Database.Migrations.Entities;
 using Microsoft.EntityFrameworkCore;
 using LoveLetter.Core.Constants;
-using System.Data;
+using LoveLetter.Core.Utils;
 
 namespace Database.Migrations.Configuration
 {
     public class GameDbContext : DbContext
     {
-        public DbSet<GameStateEntity> Games { get; set; }
-
-        public DbSet<LobbyEntity> Lobbies { get; set; }
-
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            var connectionString = 
-                string.IsNullOrEmpty(ConfigurationUtils.GetRemoteConnectionString()) ? 
-                ConfigurationUtils.GetLocalConnectionString() 
-                : ConfigurationUtils.GetRemoteConnectionString();
-
             optionsBuilder
-                .UseSqlServer(connectionString)
+                .UseSqlServer(ConfigurationUtils.GetConnectionString())
                 .UseValidationCheckConstraints()
                 .UseEnumCheckConstraints();
         }

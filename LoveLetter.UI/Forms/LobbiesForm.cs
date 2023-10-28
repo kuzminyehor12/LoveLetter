@@ -1,10 +1,14 @@
 ﻿using LoveLetter.Core.Entities;
 using LoveLetter.UI.Infrastructure;
+using System.Data;
+using System.Threading;
 
 namespace LoveLetter.UI.Forms
 {
     public partial class LobbiesForm : Form
     {
+        private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+        private Thread? _updateDataGridViewThread = null;
         public LobbiesForm()
         {
             InitializeComponent();
@@ -54,11 +58,44 @@ namespace LoveLetter.UI.Forms
         private void LobbiesForm_Load(object sender, EventArgs e)
         {
             ApplicationState.Instance.ApplicationEvents.OnGameStopped += GameForm_OnClosed;
+            LobbiesGrid.DataSource = DataGridUtils.GetLobbyDataTable();
+            _updateDataGridViewThread = new Thread(new ParameterizedThreadStart(TrackLobbies));
+            _updateDataGridViewThread.Start(_cancellationTokenSource.Token);
+        }
+
+        private void TrackLobbies(object? cancellationToken = default)
+        {
+            if (cancellationToken is CancellationToken token && token.IsCancellationRequested)
+            {
+                return;
+            }
+
+            SetDataSourceInGridView(DataGridUtils.GetLobbyDataTable());
+        }
+
+        private void SetDataSourceInGridView(DataTable table)
+        {
+            if (LobbiesGrid.InvokeRequired)
+            {
+                Invoke(SetDataSourceInGridView, new object[] { table });
+            }
+            else
+            {
+                LobbiesGrid.DataSource = table;
+                LobbiesGrid.Update();
+                LobbiesGrid.Refresh();
+            }
         }
 
         private void GameForm_OnClosed(object? sender, EventArgs e)
         {
             Show();
+        }
+
+        private void LobbiesForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            _cancellationTokenSource.Cancel();
+            _cancellationTokenSource.Dispose();
         }
     }
 }
