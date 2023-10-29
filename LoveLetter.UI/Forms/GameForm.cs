@@ -1,20 +1,17 @@
 ﻿using LoveLetter.Core.Constants;
 using LoveLetter.Core.Entities;
-using LoveLetter.Core.Exceptions;
 using LoveLetter.Core.Utils;
 using LoveLetter.UI.Infrastructure;
-using Microsoft.VisualBasic;
+using LoveLetter.UI.Properties;
 using Newtonsoft.Json.Linq;
-using System.ComponentModel;
 using System.Data;
-using System.Numerics;
-using System.Text.Json;
-using System.Threading;
 
 namespace LoveLetter.UI.Forms
 {
     public partial class GameForm : Form
     {
+        private const int BORDER_WIDTH = 5;
+        private bool _toggleBorders = false;
         private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private Thread? _updateGridViewThread = null;
         public Card InitialCard { get; set; } = new Card();
@@ -38,7 +35,36 @@ namespace LoveLetter.UI.Forms
             ApplicationState.Instance.CardEvents.OnCountess += CardEvents_OnCountess;
             ApplicationState.Instance.CardEvents.OnPrincess += CardEvents_OnPrincess;
             ApplicationState.Instance.ApplicationEvents.OnGameStopped += ApplicationEvents_OnGameStopped;
+
+            InitialCardPicture.Paint += InitialCardPicture_Paint;
+            AdditionalCardPicture.Paint += AdditionalCardPicture_Paint;
             SelectedCard = InitialCard;
+        }
+
+        private void AdditionalCardPicture_Paint(object? sender, PaintEventArgs e)
+        {
+            if (sender is PictureBox pictureBox)
+            {
+                var borderColor = _toggleBorders ? Color.Green : Color.Transparent;
+                Pen borderPen = new Pen(borderColor, BORDER_WIDTH);
+                Rectangle borderRect = pictureBox.ClientRectangle;
+                borderRect.Inflate(-1, -1);
+                e.Graphics.DrawRectangle(borderPen, borderRect);
+                borderPen.Dispose();
+            }
+        }
+
+        private void InitialCardPicture_Paint(object? sender, PaintEventArgs e)
+        {
+            if (sender is PictureBox pictureBox)
+            {
+                var borderColor = !_toggleBorders ? Color.Green : Color.Transparent;
+                Pen borderPen = new Pen(borderColor, BORDER_WIDTH);
+                Rectangle borderRect = pictureBox.ClientRectangle;
+                borderRect.Inflate(-1, -1);
+                e.Graphics.DrawRectangle(borderPen, borderRect);
+                borderPen.Dispose();
+            }
         }
 
         private void ApplicationEvents_OnGameStopped(object? sender, EventArgs e)
@@ -99,6 +125,10 @@ namespace LoveLetter.UI.Forms
                     throw new NullReferenceException(nameof(player));
                 }
 
+                Image img = DeckPicture.Image;
+                img.RotateFlip(RotateFlipType.Rotate90FlipNone);
+                DeckPicture.Image = img;
+
                 _updateGridViewThread = new Thread(new ParameterizedThreadStart(TrackAudit));
                 _updateGridViewThread.Start(new { _cancellationTokenSource.Token, GameStateId = gameState.Id });
 
@@ -110,10 +140,12 @@ namespace LoveLetter.UI.Forms
                 TurnPlayerNumberValue.Text = gameState.TurnPlayerNumber.ToString();
 
                 InitialCard = gameState.TakeCard();
+                InitialCardPicture.Image = GetImage(InitialCard);
 
                 if (gameState.InTurn(player.PlayerNumber))
                 {
                    AdditionalCard = gameState.TakeCard();
+                   AdditionalCardPicture.Image = GetImage(AdditionalCard);
                 }
             }
             catch (Exception ex)
@@ -121,6 +153,9 @@ namespace LoveLetter.UI.Forms
                 this.ThrowError(ex);
             }
         }
+
+        private Image? GetImage(Card card) =>
+            typeof(Resources).GetProperty(InitialCard.CardType.ToString())?.GetValue(new Resources()) as Image ?? null;
 
         private void TrackAudit(object? args = default)
         {
@@ -208,6 +243,7 @@ namespace LoveLetter.UI.Forms
                 if (gameState.InTurn(player.PlayerNumber))
                 {
                     AdditionalCard = gameState.TakeCard();
+                    AdditionalCardPicture.Image = GetImage(AdditionalCard);
                 }
                 else
                 {
@@ -222,8 +258,6 @@ namespace LoveLetter.UI.Forms
 
         private void InitialCardPicture_Click(object sender, EventArgs e)
         {
-            // Hover picture
-
             if (AdditionalCard is not null)
             {
                 if (IsCountessWithKingOrPrince(AdditionalCard, InitialCard))
@@ -235,12 +269,15 @@ namespace LoveLetter.UI.Forms
 
                 SelectedCard = new Card(InitialCard);
                 InitialCard = new Card(AdditionalCard);
+
+                _toggleBorders = false;
+                InitialCardPicture.Invalidate();
+                AdditionalCardPicture.Invalidate();
             }
         }
 
         private void AdditionalCardPicture_Click(object sender, EventArgs e)
         {
-            // Hover picture
             if (AdditionalCard is not null)
             {
                 if (IsCountessWithKingOrPrince(InitialCard, AdditionalCard))
@@ -252,6 +289,10 @@ namespace LoveLetter.UI.Forms
                 }
 
                 SelectedCard = new Card(AdditionalCard);
+
+                _toggleBorders = true;
+                InitialCardPicture.Invalidate();
+                AdditionalCardPicture.Invalidate();
             }
         }
 

@@ -98,6 +98,7 @@
             this.AdditionalCardPicture.Margin = new System.Windows.Forms.Padding(2);
             this.AdditionalCardPicture.Name = "AdditionalCardPicture";
             this.AdditionalCardPicture.Size = new System.Drawing.Size(150, 253);
+            this.AdditionalCardPicture.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.AdditionalCardPicture.TabIndex = 7;
             this.AdditionalCardPicture.TabStop = false;
             // 
@@ -185,10 +186,12 @@
             // 
             // DeckPicture
             // 
+            this.DeckPicture.Image = global::LoveLetter.UI.Properties.Resources.Backside;
             this.DeckPicture.Location = new System.Drawing.Point(424, 17);
             this.DeckPicture.Margin = new System.Windows.Forms.Padding(2);
             this.DeckPicture.Name = "DeckPicture";
             this.DeckPicture.Size = new System.Drawing.Size(266, 110);
+            this.DeckPicture.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.DeckPicture.TabIndex = 1;
             this.DeckPicture.TabStop = false;
             // 
@@ -198,6 +201,7 @@
             this.InitialCardPicture.Margin = new System.Windows.Forms.Padding(2);
             this.InitialCardPicture.Name = "InitialCardPicture";
             this.InitialCardPicture.Size = new System.Drawing.Size(150, 253);
+            this.InitialCardPicture.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.InitialCardPicture.TabIndex = 0;
             this.InitialCardPicture.TabStop = false;
             // 
