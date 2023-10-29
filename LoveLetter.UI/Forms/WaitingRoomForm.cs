@@ -1,5 +1,6 @@
 ﻿using LoveLetter.Core.Constants;
 using LoveLetter.Core.Entities;
+using LoveLetter.Core.Exceptions;
 using LoveLetter.UI.Infrastructure;
 
 namespace LoveLetter.UI.Forms
@@ -53,7 +54,8 @@ namespace LoveLetter.UI.Forms
                     throw new NullReferenceException(nameof(player));
                 }
 
-                var resultOk = lobby.Start(player.NickName);
+                lobby = Lobby.Fetch(lobby.Id, ApplicationState.Instance.Connection);
+                var resultOk = lobby.Start(player.Nickname);
 
                 if (resultOk)
                 {
@@ -83,13 +85,26 @@ namespace LoveLetter.UI.Forms
             try
             {
                 var lobby = ApplicationState.Instance.CurrentLobby;
+                var player = ApplicationState.Instance.CurrentPlayer;
 
                 if (lobby is null)
                 {
                     throw new NullReferenceException(nameof(lobby));
                 }
 
-                lobby.Close();
+                if (player is null)
+                {
+                    throw new NullReferenceException(nameof(player));
+                }
+
+                if (lobby.Players.Count <= 1)
+                {
+                    lobby.Close();
+                }
+                else
+                {
+                    lobby.Leave(player.Nickname);
+                }
 
                 if (ApplicationState.Instance.ApplicationEvents is not null)
                 {
@@ -125,11 +140,11 @@ namespace LoveLetter.UI.Forms
                     PollingTimer.Enabled = false;
                     return;
                 }
-                else if (WaitingRoomListView.Items.Count != lobby.Players.Count)
+                else if (WaitingRoomListBox.Items.Count != lobby.Players.Count)
                 {
-                    WaitingRoomListView.Items.Clear();
-                    lobby.Players.ForEach(p => WaitingRoomListView.Items.Add(p));
-                    WaitingRoomListView.Refresh();
+                    WaitingRoomListBox.Items.Clear();
+                    lobby.Players.ForEach(p => WaitingRoomListBox.Items.Add(p));
+                    WaitingRoomListBox.Refresh();
                 }
             }
             catch (Exception ex)
@@ -147,8 +162,38 @@ namespace LoveLetter.UI.Forms
 
         private void WaitingRoomForm_FormClosing(object sender, FormClosingEventArgs e)
         {
+            ApplicationState.Instance.CurrentLobby?.Leave(ApplicationState.Instance.CurrentPlayer?.Nickname ?? string.Empty);
             ApplicationState.Instance.ApplicationEvents.OnGameStopped -= ApplicationEvents_OnGameStopped;
             PollingTimer.Stop();
+        }
+
+        private void GameStartTimer_Tick(object sender, EventArgs e)
+        {
+            try
+            {
+                var lobby = ApplicationState.Instance.CurrentLobby;
+
+                if (lobby is null)
+                {
+                    throw new NullReferenceException(nameof(lobby));
+                }
+
+                GameStartTimer.Stop();
+
+                ApplicationState.Instance.CurrentGameState = GameState.Fetch(lobby.Id, ApplicationState.Instance.Connection);
+
+                GameStartTimer.Enabled = false;
+                JoinGame();
+            }
+            catch (NotExistingEntityException)
+            {
+                GameStartTimer.Start();
+                return;
+            }
+            catch (Exception ex)
+            {
+                this.ThrowError(ex);
+            }
         }
     }
 }

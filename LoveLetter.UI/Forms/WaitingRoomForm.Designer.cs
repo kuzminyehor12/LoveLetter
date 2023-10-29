@@ -31,8 +31,9 @@
             this.components = new System.ComponentModel.Container();
             this.GameStartBtn = new System.Windows.Forms.Button();
             this.QuitLobbyBtn = new System.Windows.Forms.Button();
-            this.WaitingRoomListView = new System.Windows.Forms.ListView();
             this.PollingTimer = new System.Windows.Forms.Timer(this.components);
+            this.WaitingRoomListBox = new System.Windows.Forms.ListBox();
+            this.GameStartTimer = new System.Windows.Forms.Timer(this.components);
             this.SuspendLayout();
             // 
             // GameStartBtn
@@ -45,6 +46,7 @@
             this.GameStartBtn.TabIndex = 1;
             this.GameStartBtn.Text = "Start Game";
             this.GameStartBtn.UseVisualStyleBackColor = true;
+            this.GameStartBtn.Click += new System.EventHandler(this.GameStartBtn_Click);
             // 
             // QuitLobbyBtn
             // 
@@ -58,27 +60,34 @@
             this.QuitLobbyBtn.UseVisualStyleBackColor = true;
             this.QuitLobbyBtn.Click += new System.EventHandler(this.QuitLobbyBtn_Click);
             // 
-            // WaitingRoomListView
-            // 
-            this.WaitingRoomListView.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.WaitingRoomListView.Location = new System.Drawing.Point(94, 23);
-            this.WaitingRoomListView.Name = "WaitingRoomListView";
-            this.WaitingRoomListView.Size = new System.Drawing.Size(653, 290);
-            this.WaitingRoomListView.TabIndex = 3;
-            this.WaitingRoomListView.UseCompatibleStateImageBehavior = false;
-            // 
             // PollingTimer
             // 
             this.PollingTimer.Enabled = true;
             this.PollingTimer.Interval = 5000;
             this.PollingTimer.Tick += new System.EventHandler(this.PollingTimer_Tick);
             // 
+            // WaitingRoomListBox
+            // 
+            this.WaitingRoomListBox.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.WaitingRoomListBox.FormattingEnabled = true;
+            this.WaitingRoomListBox.ItemHeight = 28;
+            this.WaitingRoomListBox.Location = new System.Drawing.Point(94, 38);
+            this.WaitingRoomListBox.Name = "WaitingRoomListBox";
+            this.WaitingRoomListBox.Size = new System.Drawing.Size(653, 284);
+            this.WaitingRoomListBox.TabIndex = 3;
+            // 
+            // GameStartTimer
+            // 
+            this.GameStartTimer.Enabled = true;
+            this.GameStartTimer.Interval = 5000;
+            this.GameStartTimer.Tick += new System.EventHandler(this.GameStartTimer_Tick);
+            // 
             // WaitingRoomForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(834, 447);
-            this.Controls.Add(this.WaitingRoomListView);
+            this.Controls.Add(this.WaitingRoomListBox);
             this.Controls.Add(this.QuitLobbyBtn);
             this.Controls.Add(this.GameStartBtn);
             this.Margin = new System.Windows.Forms.Padding(2);
@@ -93,7 +102,8 @@
         #endregion
         private Button GameStartBtn;
         private Button QuitLobbyBtn;
-        private ListView WaitingRoomListView;
         private System.Windows.Forms.Timer PollingTimer;
+        private ListBox WaitingRoomListBox;
+        private System.Windows.Forms.Timer GameStartTimer;
     }
 }

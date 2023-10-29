@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             this.GameSplitContainer = new System.Windows.Forms.SplitContainer();
             this.AdditionalCardPicture = new System.Windows.Forms.PictureBox();
             this.EndTurnBtn = new System.Windows.Forms.Button();
@@ -51,6 +52,7 @@
             this.YourNumberLabel = new System.Windows.Forms.Label();
             this.PollingTimer = new System.Windows.Forms.Timer(this.components);
             this.AfkTimer = new System.Windows.Forms.Timer(this.components);
+            this.RefreshIcon = new System.Windows.Forms.PictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.GameSplitContainer)).BeginInit();
             this.GameSplitContainer.Panel1.SuspendLayout();
             this.GameSplitContainer.Panel2.SuspendLayout();
@@ -64,6 +66,7 @@
             this.AuditPage.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.AuditGrid)).BeginInit();
             this.Info.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.RefreshIcon)).BeginInit();
             this.SuspendLayout();
             // 
             // GameSplitContainer
@@ -75,6 +78,7 @@
             // 
             // GameSplitContainer.Panel1
             // 
+            this.GameSplitContainer.Panel1.Controls.Add(this.RefreshIcon);
             this.GameSplitContainer.Panel1.Controls.Add(this.AdditionalCardPicture);
             this.GameSplitContainer.Panel1.Controls.Add(this.EndTurnBtn);
             this.GameSplitContainer.Panel1.Controls.Add(this.PlayerValueLabel);
@@ -236,6 +240,14 @@
             this.AuditGrid.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
             this.AuditGrid.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.AllCells;
             this.AuditGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Segoe UI", 6F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.AuditGrid.DefaultCellStyle = dataGridViewCellStyle1;
             this.AuditGrid.Location = new System.Drawing.Point(4, 2);
             this.AuditGrid.Name = "AuditGrid";
             this.AuditGrid.ReadOnly = true;
@@ -332,6 +344,17 @@
             this.AfkTimer.Interval = 300000;
             this.AfkTimer.Tick += new System.EventHandler(this.AfkTimer_Tick);
             // 
+            // RefreshIcon
+            // 
+            this.RefreshIcon.Image = global::LoveLetter.UI.Properties.Resources.reload;
+            this.RefreshIcon.Location = new System.Drawing.Point(652, 136);
+            this.RefreshIcon.Name = "RefreshIcon";
+            this.RefreshIcon.Size = new System.Drawing.Size(38, 34);
+            this.RefreshIcon.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.RefreshIcon.TabIndex = 8;
+            this.RefreshIcon.TabStop = false;
+            this.RefreshIcon.Click += new System.EventHandler(this.RefreshIcon_Click);
+            // 
             // GameForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
@@ -356,6 +379,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.AuditGrid)).EndInit();
             this.Info.ResumeLayout(false);
             this.Info.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.RefreshIcon)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -384,5 +408,6 @@
         private Label YourPlayerNumberValue;
         private Label YourNumberLabel;
         private System.Windows.Forms.Timer AfkTimer;
+        private PictureBox RefreshIcon;
     }
 }

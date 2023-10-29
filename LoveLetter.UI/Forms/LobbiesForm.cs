@@ -8,8 +8,6 @@ namespace LoveLetter.UI.Forms
 {
     public partial class LobbiesForm : Form
     {
-        private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
-        private Thread? _updateDataGridViewThread = null;
         public LobbiesForm()
         {
             InitializeComponent();
@@ -19,17 +17,10 @@ namespace LoveLetter.UI.Forms
         {
             try
             {
-                var lobby = ApplicationState.Instance.CurrentLobby;
-
-                if (lobby is null)
-                {
-                    throw new NullReferenceException(nameof(lobby));
-                }
-
                 if (Guid.TryParse(LobbiesGrid.Rows[e.RowIndex].Cells[0].Value.ToString(), out var lobbyId))
                 {
-                    lobby = Lobby.Join(lobbyId, NicknameValue.Text.Trim(), ApplicationState.Instance.Connection);
-                    short yourPlayerNumber = (short)lobby.Players.Count;
+                    ApplicationState.Instance.CurrentLobby = Lobby.Join(lobbyId, NicknameValue.Text.Trim(), ApplicationState.Instance.Connection);
+                    short yourPlayerNumber = (short)ApplicationState.Instance.CurrentLobby.Players.Count;
                     JoinWaitingRoom(yourPlayerNumber);
                 }
             }
@@ -41,11 +32,6 @@ namespace LoveLetter.UI.Forms
             {
                 this.ThrowError(ex);
             }
-        }
-
-        private void LobbiesGrid_CellContentDoubleClick(object sender, DataGridViewCellEventArgs e)
-        {
-            LobbiesGrid_CellDoubleClick(sender, e);
         }
 
         private void CreateLobbyBtn_Click(object sender, EventArgs e)
@@ -72,32 +58,6 @@ namespace LoveLetter.UI.Forms
             ApplicationState.Instance.ApplicationEvents.OnGameStopped += GameForm_OnClosed;
             ApplicationState.Instance.Connection.Open();
             LobbiesGrid.DataSource = DataGridUtils.GetLobbyDataTable(ApplicationState.Instance.Connection);
-            _updateDataGridViewThread = new Thread(new ParameterizedThreadStart(TrackLobbies));
-            _updateDataGridViewThread.Start(_cancellationTokenSource.Token);
-        }
-
-        private void TrackLobbies(object? cancellationToken = default)
-        {
-            if (cancellationToken is CancellationToken token && token.IsCancellationRequested)
-            {
-                return;
-            }
-
-            SetDataSourceInGridView(DataGridUtils.GetLobbyDataTable(ApplicationState.Instance.Connection));
-        }
-
-        private void SetDataSourceInGridView(DataTable table)
-        {
-            if (LobbiesGrid.InvokeRequired)
-            {
-                Invoke(SetDataSourceInGridView, new object[] { table });
-            }
-            else
-            {
-                LobbiesGrid.DataSource = table;
-                LobbiesGrid.Update();
-                LobbiesGrid.Refresh();
-            }
         }
 
         private void GameForm_OnClosed(object? sender, EventArgs e)
@@ -109,8 +69,13 @@ namespace LoveLetter.UI.Forms
         {
             ApplicationState.Instance.Connection.Close();
             ApplicationState.Instance.ApplicationEvents.OnGameStopped -= GameForm_OnClosed;
-            _cancellationTokenSource.Cancel();
-            _cancellationTokenSource.Dispose();
+        }
+
+        private void RefreshIcon_Click(object sender, EventArgs e)
+        {
+            LobbiesGrid.DataSource = DataGridUtils.GetLobbyDataTable(ApplicationState.Instance.Connection);
+            LobbiesGrid.Update();
+            LobbiesGrid.Refresh();
         }
     }
 }

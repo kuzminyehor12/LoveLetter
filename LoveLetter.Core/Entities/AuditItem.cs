@@ -17,7 +17,7 @@ namespace LoveLetter.Core.Entities
 
         public static bool Append(Guid gameStateId, Player player, string message, SqlConnection connection)
         {
-            var playerNickname = player.NickName;
+            var playerNickname = player.Nickname;
             var command = AuditQuery.Insert(gameStateId, playerNickname, player.PlayerNumber, message);
             
             using (var cmd = connection.CreateCommand())

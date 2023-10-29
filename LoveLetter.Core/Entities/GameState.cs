@@ -1,4 +1,5 @@
 ﻿using LoveLetter.Core.Adapters;
+using LoveLetter.Core.Exceptions;
 using LoveLetter.Core.Queries;
 using LoveLetter.Core.Utils;
 using Microsoft.Data.SqlClient;
@@ -40,6 +41,10 @@ namespace LoveLetter.Core.Entities
                 WinnerPlayerNumber = reader.IsDBNull(4) ? null : Convert.ToInt16(reader[4]);
                 StartDate = Convert.ToDateTime(reader[5]);
                 EndDate = reader.IsDBNull(6) ? null : Convert.ToDateTime(reader[6]);
+            }
+            else
+            {
+                throw new NotExistingEntityException();
             }
         }
 

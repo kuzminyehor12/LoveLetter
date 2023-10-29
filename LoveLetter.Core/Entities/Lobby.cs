@@ -52,7 +52,7 @@ namespace LoveLetter.Core.Entities
         {
             var command = LobbyQuery.SelectById(lobbyId);
             var adapter = new LobbySqlAdapter(connection);
-            return (Lobby)adapter.Populate(command);
+            return ((Lobby)adapter.Populate(command)).UseAdapter(adapter);
         }
 
         public static Lobby Join(Guid lobbyId, string nickname, SqlConnection connection)
@@ -66,7 +66,7 @@ namespace LoveLetter.Core.Entities
 
             if (string.IsNullOrEmpty(nickname))
             {
-                nickname = "Player " + lobby.Players.Count + 1;
+                nickname = "Player " + (lobby.Players.Count + 1);
             }
 
             if (lobby.Players.Count == Constraints.MAX_PLAYER_NUMBER)
@@ -76,35 +76,57 @@ namespace LoveLetter.Core.Entities
 
             lobby.Players.Add(nickname);
             var command = LobbyQuery.UpdatePlayers(lobbyId, lobby.Players);
-            AuditItem.Append(lobbyId, nickname, nameof(Join), connection);
-            return lobby;
+            var adapter = new LobbySqlAdapter(connection);
+            adapter.SaveChanges(command);
+            return ((Lobby)adapter.Populate(LobbyQuery.SelectById(lobbyId))).UseAdapter(adapter);
         }
 
         public bool Leave(string nickname)
         {
-            Players.Remove(nickname);
-            var command = LobbyQuery.UpdatePlayers(Id, Players);
-            AuditItem.Append(Id, nickname, nameof(Leave), _adapter.Connection);
-            return true;
+            try
+            {
+                Players.Remove(nickname);
+                var command = LobbyQuery.UpdatePlayers(Id, Players);
+                _adapter.SaveChanges(command);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         public bool Start(string nickname)
         {
-            if (Players.Count < 2 || Players.Count > Constraints.MAX_PLAYER_NUMBER)
+            try
+            {
+                if (Players.Count < 2 || Players.Count > Constraints.MAX_PLAYER_NUMBER)
+                {
+                    return false;
+                }
+
+                var command = LobbyQuery.Start(Id);
+                _adapter.SaveChanges(command);
+                return true;
+            }
+            catch (Exception)
             {
                 return false;
             }
-
-            var command = LobbyQuery.Start(Id);
-            AuditItem.Append(Id, nickname, nameof(Start), _adapter.Connection);
-            return true;
         }
 
         public bool Close()
         {
-            var command = LobbyQuery.Close(Id);
-            AuditItem.Append(Id, nameof(Lobby), nameof(Close), _adapter.Connection);
-            return true;
+            try
+            {
+                var command = LobbyQuery.Close(Id);
+                _adapter.SaveChanges(command);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
     }
 }

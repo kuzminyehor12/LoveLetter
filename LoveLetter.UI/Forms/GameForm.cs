@@ -12,8 +12,7 @@ namespace LoveLetter.UI.Forms
     {
         private const int BORDER_WIDTH = 5;
         private bool _toggleBorders = false;
-        private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
-        private Thread? _updateGridViewThread = null;
+
         public Card InitialCard { get; set; } = new Card();
 
         public Card? AdditionalCard { get; private set; }
@@ -25,6 +24,7 @@ namespace LoveLetter.UI.Forms
         public GameForm()
         {
             InitializeComponent();
+
             ApplicationState.Instance.CardEvents = new CardEvents();
             ApplicationState.Instance.CardEvents.OnGuard += CardEvents_OnGuard;
             ApplicationState.Instance.CardEvents.OnPriest += CardEvents_OnPriest;
@@ -129,18 +129,17 @@ namespace LoveLetter.UI.Forms
                 img.RotateFlip(RotateFlipType.Rotate90FlipNone);
                 DeckPicture.Image = img;
 
-                _updateGridViewThread = new Thread(new ParameterizedThreadStart(TrackAudit));
-                _updateGridViewThread.Start(new { _cancellationTokenSource.Token, GameStateId = gameState.Id });
-
                 PlayerNumberValue.Maximum = Constraints.MAX_PLAYER_NUMBER;
                 PlayerValueValue.Maximum = Enum.GetValues(typeof(CardType)).Length;
 
-                YourNicknameValue.Text = player.NickName;
+                YourNicknameValue.Text = player.Nickname;
                 YourPlayerNumberValue.Text = player.PlayerNumber.ToString();
                 TurnPlayerNumberValue.Text = gameState.TurnPlayerNumber.ToString();
 
                 InitialCard = gameState.TakeCard();
                 InitialCardPicture.Image = GetImage(InitialCard);
+
+                AuditGrid.DataSource = DataGridUtils.LoadAudit(gameState.Id, ApplicationState.Instance.Connection);
 
                 if (gameState.InTurn(player.PlayerNumber))
                 {
@@ -155,38 +154,7 @@ namespace LoveLetter.UI.Forms
         }
 
         private Image? GetImage(Card card) =>
-            typeof(Resources).GetProperty(InitialCard.CardType.ToString())?.GetValue(new Resources()) as Image ?? null;
-
-        private void TrackAudit(object? args = default)
-        {
-            if (args is not null)
-            {
-                if ((JObject.FromObject(args)["Token"]?.ToObject<CancellationToken>() ?? null) is CancellationToken token 
-                    && token.IsCancellationRequested)
-                {
-                    return;
-                }
-
-                if (Guid.TryParse(JObject.FromObject(args)["GameStateId"]?.ToString() ?? null, out var gameStateId))
-                {
-                    SetDataSourceInGridView(DataGridUtils.LoadAudit(gameStateId, ApplicationState.Instance.Connection));
-                }
-            }
-        }
-
-        private void SetDataSourceInGridView(DataTable table)
-        {
-            if (AuditGrid.InvokeRequired)
-            {
-                Invoke(SetDataSourceInGridView, new object[] { table });
-            }
-            else
-            {
-                AuditGrid.DataSource = table;
-                AuditGrid.Update();
-                AuditGrid.Refresh();
-            }
-        }
+            typeof(Resources).GetProperty(card.CardType.ToString())?.GetValue(new Resources()) as Image ?? null;
 
         private void PollingTimer_Tick(object sender, EventArgs e)
         {
@@ -209,12 +177,16 @@ namespace LoveLetter.UI.Forms
 
                 ApplicationState.Instance.CurrentGameState = GameState.Fetch(lobby.Id, ApplicationState.Instance.Connection);
                 var gameState = ApplicationState.Instance.CurrentGameState;
-                player = gameState.Players.FirstOrDefault(p => p.NickName == player.NickName);
+                player = gameState.Players.FirstOrDefault(p => p.Nickname == player.Nickname);
 
                 if (player is null)
                 {
                     throw new NullReferenceException(nameof(player));
                 }
+
+                AuditGrid.DataSource = DataGridUtils.LoadAudit(gameState.Id, ApplicationState.Instance.Connection);
+                AuditGrid.Update();
+                AuditGrid.Refresh();
 
                 if (gameState.WinnerPlayerNumber is not null)
                 {
@@ -229,7 +201,7 @@ namespace LoveLetter.UI.Forms
 
                 if (!gameState.Players.Any(p => p.PlayerNumber == player.PlayerNumber))
                 {
-                    lobby.Leave(player.NickName);
+                    lobby.Leave(player.Nickname);
                     this.LoseMessage();
 
                     if (ApplicationState.Instance.ApplicationEvents is not null)
@@ -237,7 +209,7 @@ namespace LoveLetter.UI.Forms
                         ApplicationState.Instance.ApplicationEvents.OnGameStoppedHandler(e);
                     }
                 }
-
+                
                 TurnPlayerNumberValue.Text = gameState.TurnPlayerNumber.ToString();
 
                 if (gameState.InTurn(player.PlayerNumber))
@@ -523,7 +495,7 @@ namespace LoveLetter.UI.Forms
                     else if (InitialCard < opponent.CurrentCard)
                     {
                         gameState.Lose(player);
-                        lobby.Leave(player.NickName);
+                        lobby.Leave(player.Nickname);
                     }
                 }
 
@@ -675,9 +647,6 @@ namespace LoveLetter.UI.Forms
             }
 
             ApplicationState.Instance.CardEvents = null;
-
-            _cancellationTokenSource.Cancel();
-            _cancellationTokenSource.Dispose();
         }
 
         private void AfkTimer_Tick(object sender, EventArgs e)
@@ -704,7 +673,7 @@ namespace LoveLetter.UI.Forms
                 }
 
                 gameState.Lose(player);
-                lobby.Leave(player.NickName);
+                lobby.Leave(player.Nickname);
                 this.AlertMessage($"You are kicked for being afk for {TimeSpan.FromMilliseconds(AfkTimer.Interval).Minutes} minutes!");
 
                 if (ApplicationState.Instance.ApplicationEvents is not null)
@@ -733,6 +702,27 @@ namespace LoveLetter.UI.Forms
             {
                 this.AlertMessage("You cannot choose this player because he used " + CardType.Handmaid);
                 PlayerNumberValue.Value = PlayerNumberValue.Minimum;
+            }
+        }
+
+        private void RefreshIcon_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var gameState = ApplicationState.Instance.CurrentGameState;
+
+                if (gameState is null)
+                {
+                    throw new NullReferenceException(nameof(gameState));
+                }
+
+                AuditGrid.DataSource = DataGridUtils.LoadAudit(gameState.Id, ApplicationState.Instance.Connection);
+                AuditGrid.Update();
+                AuditGrid.Refresh();
+            }
+            catch (Exception ex)
+            {
+                this.ThrowError(ex);
             }
         }
     }

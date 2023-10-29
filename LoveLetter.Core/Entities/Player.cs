@@ -1,4 +1,5 @@
 ﻿using LoveLetter.Core.Utils;
+using System.Xml.Serialization;
 
 namespace LoveLetter.Core.Entities
 {
@@ -8,7 +9,8 @@ namespace LoveLetter.Core.Entities
 
         public short PlayerNumber { get; set; }
 
-        public string NickName
+        [XmlElement("PlayerNickname")]
+        public string Nickname
         {
             get
             {
@@ -29,7 +31,7 @@ namespace LoveLetter.Core.Entities
         public Player(short playerNumber, string nickName)
         {
             PlayerNumber = playerNumber;
-            NickName = nickName;
+            Nickname = nickName;
         }
     }
 }

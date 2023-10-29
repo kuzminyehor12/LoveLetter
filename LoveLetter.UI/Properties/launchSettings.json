@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "LoveLetter.UI": {
+      "commandName": "Project",
+      "sqlDebugging": true
+    }
+  }
+}
