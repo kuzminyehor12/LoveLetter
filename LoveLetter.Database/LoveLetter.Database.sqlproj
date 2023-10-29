@@ -6,14 +6,14 @@
     <Name>LoveLetter.Database</Name>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectVersion>4.1</ProjectVersion>
-    <ProjectGuid>{c3fb3f54-9ee4-4770-a1d7-2a506da8980c}</ProjectGuid>
+    <ProjectGuid>{c30d4a19-7461-40fb-9383-634d147fcc95}</ProjectGuid>
     <DSP>Microsoft.Data.Tools.Schema.Sql.Sql130DatabaseSchemaProvider</DSP>
     <OutputType>Database</OutputType>
     <RootPath>
     </RootPath>
     <RootNamespace>LoveLetter.Database</RootNamespace>
     <AssemblyName>LoveLetter.Database</AssemblyName>
-    <ModelCollation>1033,CI</ModelCollation>
+    <ModelCollation>1033, CI</ModelCollation>
     <DefaultFileStructure>BySchemaAndSchemaType</DefaultFileStructure>
     <DeployToDatabase>True</DeployToDatabase>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
@@ -22,8 +22,6 @@
     <SqlServerVerification>False</SqlServerVerification>
     <IncludeCompositeObjects>True</IncludeCompositeObjects>
     <TargetDatabaseSet>True</TargetDatabaseSet>
-    <DefaultCollation>SQL_Latin1_General_CP1_CI_AS</DefaultCollation>
-    <DefaultFilegroup>PRIMARY</DefaultFilegroup>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <OutputPath>bin\Release\</OutputPath>
@@ -58,18 +56,5 @@
   <Import Condition="'$(SQLDBExtensionsRefPath)' == ''" Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\SSDT\Microsoft.Data.Tools.Schema.SqlTasks.targets" />
   <ItemGroup>
     <Folder Include="Properties" />
-    <Folder Include="dbo\" />
-    <Folder Include="dbo\Tables\" />
-    <Folder Include="dbo\Stored Procedures\" />
-  </ItemGroup>
-  <ItemGroup>
-    <Build Include="dbo\Tables\__EFMigrationsHistory.sql" />
-    <Build Include="dbo\Tables\Lobbies.sql" />
-    <Build Include="dbo\Tables\States.sql" />
-    <Build Include="dbo\Tables\Audit.sql" />
-    <Build Include="dbo\Stored Procedures\GenerateDeck_SP.sql" />
-    <Build Include="dbo\Stored Procedures\GenerateRandomTurnPlayerNumber_SP.sql" />
-    <Build Include="dbo\Stored Procedures\ShuffleArray_SP.sql" />
-    <Build Include="dbo\Stored Procedures\EnumeratePlayers_SP.sql" />
   </ItemGroup>
 </Project>

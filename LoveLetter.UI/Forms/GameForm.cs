@@ -388,7 +388,7 @@ namespace LoveLetter.UI.Forms
                         string.Join(" ", nameof(FindOpponent), opponent.PlayerNumber),
                         ApplicationState.Instance.Connection);
 
-                    if (opponent.CurrentCard.CardType == CardType.Princess)
+                    if (opponent.CurrentCard == CardType.Princess)
                     {
                         gameState.Lose(opponent);
                     }
@@ -424,7 +424,7 @@ namespace LoveLetter.UI.Forms
                 if (playerToUpdate is not null)
                 {
                     playerToUpdate.Available = false;
-                    gameState.Save(gameState.Players);
+                    gameState.Save((nameof(GameState.Players), gameState.Players));
                 }
 
                 gameState.EndTurn(InitialCard);
@@ -574,7 +574,7 @@ namespace LoveLetter.UI.Forms
                         string.Join(" ", nameof(FindOpponent), opponent.PlayerNumber, e.CardType), 
                         ApplicationState.Instance.Connection);
 
-                    if (e.CardType == (short)opponent.CurrentCard.CardType)
+                    if (e.CardType == (short)opponent.CurrentCard)
                     {
                         gameState.Win(player.PlayerNumber);
                         this.CongratulationMessage();

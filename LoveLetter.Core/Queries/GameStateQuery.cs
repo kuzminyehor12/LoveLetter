@@ -6,16 +6,16 @@ namespace LoveLetter.Core.Queries
     {
         public static string SelectById(Guid lobbyId) => $"SELECT * FROM {Tables.States} WHERE Id={lobbyId}";
 
-        public static string UpdateColumn<T>(Guid lobbyId, T column) =>
-            $"UPDATE {Tables.States} SET {nameof(column)}={column} WHERE Id={lobbyId}";
+        public static string UpdateColumn(Guid lobbyId, (string ColumnName, string ColumnValue) column) =>
+            $"UPDATE {Tables.States} SET {column.ColumnName}={column.ColumnValue} WHERE Id={lobbyId}";
 
-        public static string UpdateColumns(Guid lobbyId, params string[] columns)
+        public static string UpdateColumns(Guid lobbyId, params (string ColumnName, string ColumnValue)[] columns)
         {
             var query = $"UPDATE {Tables.States} SET ";
 
             foreach (var column in columns)
             {
-                query += $"{nameof(column)}={column},";
+                query += $"{column.ColumnName}={column.ColumnValue},";
             }
 
             query = query.TrimEnd(',');

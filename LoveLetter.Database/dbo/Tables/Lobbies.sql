@@ -8,8 +8,8 @@
 
 
 GO
-CREATE TRIGGER [OnGameStarted_TRG]
-ON [Lobbies]
+CREATE TRIGGER [dbo].[OnGameStarted_TRG]
+ON [dbo].[Lobbies]
 AFTER UPDATE
 AS
 BEGIN

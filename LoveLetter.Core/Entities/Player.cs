@@ -1,4 +1,6 @@
-﻿namespace LoveLetter.Core.Entities
+﻿using LoveLetter.Core.Utils;
+
+namespace LoveLetter.Core.Entities
 {
     public class Player : DomainEntity
     {
@@ -20,7 +22,7 @@
             set { _nickname = value; }
         }
 
-        public Card CurrentCard { get; set; } = new Card();
+        public CardType CurrentCard { get; set; }
 
         public bool Available { get; set; } = true;
 

@@ -14,7 +14,7 @@ BEGIN
     SELECT Value
     FROM @arrayTable
     ORDER BY NEWID();
-    SET @shuffledArray = '[';
+    SET @shuffledArray = '';
 
     DECLARE @rowNum INT = 1;
     DECLARE @rowCount INT = ((SELECT COUNT(*) FROM #ShuffledTable) - 1);
@@ -35,8 +35,6 @@ BEGIN
 		END
         SET @rowNum = @rowNum + 1;
     END
-
-	SET @shuffledArray = @shuffledArray + ']';
 
     DROP TABLE #ShuffledTable;
 END

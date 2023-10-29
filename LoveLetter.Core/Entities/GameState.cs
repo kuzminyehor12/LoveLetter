@@ -1,5 +1,6 @@
 ﻿using LoveLetter.Core.Adapters;
 using LoveLetter.Core.Queries;
+using LoveLetter.Core.Utils;
 using Microsoft.Data.SqlClient;
 using System.Data;
 using System.IO;
@@ -55,26 +56,40 @@ namespace LoveLetter.Core.Entities
             return ((GameState)adapter.Populate(command)).UseAdapter(adapter);
         }
 
-        public bool Save<T>(T value)
+        public bool Save((string ColumnName, object ColumnValue) column)
         {
-            var propertyInfo = typeof(GameState).GetProperty(nameof(value));
+            try
+            {
+                var columnResult = ParseUtils.ParseValues(column).SingleOrDefault();
 
-            if (propertyInfo is null)
+                if (string.IsNullOrEmpty(columnResult.ColumnValue))
+                {
+                    return false;
+                }
+
+                var command = GameStateQuery.UpdateColumn(Id, columnResult);
+                _adapter.SaveChanges(command);
+                return true;
+            }
+            catch (Exception)
             {
                 return false;
             }
-
-            var command = GameStateQuery.UpdateColumn(Id, value);
-            _adapter.SaveChanges(command);
-            return true;
         }
 
-        public bool Save(params object[] values)
+        public bool Save(params (string ColumnName, object ColumnValue)[] columns)
         {
-            var stringValues = values.Select(v => JsonSerializer.Serialize(v)).ToArray() ?? Array.Empty<string>();
-            var command = GameStateQuery.UpdateColumns(Id, stringValues);
-            _adapter.SaveChanges(command);
-            return true;
+            try
+            {
+                var stringValues = ParseUtils.ParseValues(columns);
+                var command = GameStateQuery.UpdateColumns(Id, stringValues.ToArray());
+                _adapter.SaveChanges(command);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         public bool InTurn(short playerNumber) =>
@@ -88,8 +103,12 @@ namespace LoveLetter.Core.Entities
             if (player is not null)
             {
                 player.CurrentCard = card;
-                Save(Deck, Players);
-                AuditItem.Append(Id, player, nameof(TakeCard), _adapter.Connection);
+                var resultOk = Save((nameof(Deck) ,Deck), (nameof(Players), Players));
+
+                if (resultOk)
+                {
+                    AuditItem.Append(Id, player, nameof(TakeCard), _adapter.Connection);
+                }
             }
             
             return card;
@@ -99,11 +118,10 @@ namespace LoveLetter.Core.Entities
         {
             WinnerPlayerNumber = winnerPlayerNumber;
             EndDate = DateTime.Now;
-            Save(WinnerPlayerNumber, EndDate);
-
+            var resultOk = Save((nameof(WinnerPlayerNumber), WinnerPlayerNumber), (nameof(EndDate), EndDate));
             var player = Players.FirstOrDefault(p => p.PlayerNumber == WinnerPlayerNumber);
 
-            if (player is not null)
+            if (player is not null && resultOk)
             {
                 AuditItem.Append(Id, player, nameof(Win), _adapter.Connection);
             }
@@ -112,8 +130,12 @@ namespace LoveLetter.Core.Entities
         public void Lose(Player loser)
         {
             Players.Remove(loser);
-            Save(Players);
-            AuditItem.Append(Id, loser, nameof(Lose), _adapter.Connection);
+            var resultOk = Save((nameof(Players), Players));
+
+            if (resultOk)
+            {
+                AuditItem.Append(Id, loser, nameof(Lose), _adapter.Connection);
+            }
         }
 
         public void EndTurn(Card currentCard)
@@ -130,9 +152,9 @@ namespace LoveLetter.Core.Entities
             }
 
             ReindexPlayers();
-            Save(TurnPlayerNumber, Players);
+            var resultOk = Save((nameof(TurnPlayerNumber), TurnPlayerNumber), (nameof(Players), Players));
 
-            if (player is not null)
+            if (player is not null && resultOk)
             {
                 player.CurrentCard = new Card(currentCard);
                 AuditItem.Append(Id, player, nameof(EndTurn), _adapter.Connection);
@@ -154,9 +176,13 @@ namespace LoveLetter.Core.Entities
                 var currentPlayerCard = currentPlayer.CurrentCard;
                 currentPlayer.CurrentCard = new Card(opponent.CurrentCard);
                 opponent.CurrentCard = new Card(currentPlayerCard);
-                Save(Players);
-                AuditItem.Append(Id, currentPlayer, nameof(SwapCards), _adapter.Connection);
-                AuditItem.Append(Id, opponent, nameof(SwapCards), _adapter.Connection);
+                var resultOk = Save((nameof(Players), Players));
+
+                if (resultOk)
+                {
+                    AuditItem.Append(Id, currentPlayer, nameof(SwapCards), _adapter.Connection);
+                    AuditItem.Append(Id, opponent, nameof(SwapCards), _adapter.Connection);
+                }
             }
         }
 
