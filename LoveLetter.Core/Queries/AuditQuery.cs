@@ -13,6 +13,6 @@ namespace LoveLetter.Core.Queries
             $"VALUES ('{Guid.NewGuid()}', '{playerNickname}', 0, '{message}', '{gameStateId}', '{DateTime.Now}')";
 
         public static string SelectAll(Guid gameStateId) => 
-            $"SELECT * FROM {Tables.Audit} WHERE GameStateId='{gameStateId}' ORDER BY Timestamp DESC";
+            $"SELECT * FROM {Tables.Audit} WHERE GameStateId='{gameStateId}' ORDER BY Timestamp ASC";
     }
 }

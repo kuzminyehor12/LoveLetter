@@ -4,8 +4,7 @@ using LoveLetter.Core.Queries;
 using LoveLetter.Core.Utils;
 using Microsoft.Data.SqlClient;
 using System.Data;
-using System.IO;
-using System.Text.Json;
+using System.Numerics;
 using System.Xml.Serialization;
 
 namespace LoveLetter.Core.Entities
@@ -29,18 +28,21 @@ namespace LoveLetter.Core.Entities
 
         public DateTime? EndDate { get; private set; }
 
+        public Deck CardHistory { get; private set; }
+
         public GameState(SqlDataReader reader)
         {
             if (reader.Read())
             {
-                var xmlSerializer = new XmlSerializer(typeof(List<Player>));
-                Id = Guid.Parse(reader[0]?.ToString() ?? string.Empty);
-                Players = xmlSerializer.Deserialize(reader.GetXmlReader(1)) as List<Player> ?? new List<Player>();
-                Deck = new Deck((reader[2].ToString() ?? string.Empty).Split(',').Select(cardType => short.Parse(cardType)));
-                TurnPlayerNumber = Convert.ToInt16(reader[3]);
-                WinnerPlayerNumber = reader.IsDBNull(4) ? null : Convert.ToInt16(reader[4]);
-                StartDate = Convert.ToDateTime(reader[5]);
-                EndDate = reader.IsDBNull(6) ? null : Convert.ToDateTime(reader[6]);
+                var xmlSerializer = new XmlSerializer(typeof(PlayersList));
+                Id = reader.GetGuid(0);
+                Players = xmlSerializer.Deserialize(reader.GetXmlReader(1)) as List<Player> ?? PlayersList.Empty();
+                Deck = new Deck(reader.GetString(2).Split(',').Select(cardType => short.Parse(cardType)));
+                TurnPlayerNumber = reader.GetInt16(3);
+                WinnerPlayerNumber = reader.IsDBNull(4) ? null : reader.GetInt16(4);
+                StartDate = reader.GetDateTime(5);
+                EndDate = reader.IsDBNull(6) ? null : reader.GetDateTime(6);
+                CardHistory = string.IsNullOrEmpty(reader.GetString(7)) ? new Deck() : new Deck(reader.GetString(7).Split(',').Select(cardType => short.Parse(cardType)));
             }
             else
             {
@@ -100,23 +102,32 @@ namespace LoveLetter.Core.Entities
         public bool InTurn(short playerNumber) =>
             TurnPlayerNumber == playerNumber;
 
-        public Card TakeCard()
+        public Card TakeCard(Player player)
         {
             var card = Deck.Dequeue();
-            var player = Players.FirstOrDefault(p => p.PlayerNumber == TurnPlayerNumber);
 
             if (player is not null)
             {
-                player.CurrentCard = card;
-                var resultOk = Save((nameof(Deck) ,Deck), (nameof(Players), Players));
-
-                if (resultOk)
+                var playerToUpdate = Players.FirstOrDefault(p => p.Nickname == player.Nickname);
+                if (playerToUpdate is not null)
                 {
-                    AuditItem.Append(Id, player, nameof(TakeCard), _adapter.Connection);
+                    playerToUpdate.CurrentCard = card;
+                    var resultOk = Save((nameof(Deck), Deck), (nameof(Players), Players));
+
+                    if (resultOk)
+                    {
+                        AuditItem.Append(Id, player, nameof(TakeCard), _adapter.Connection);
+                    }
                 }
             }
             
             return card;
+        }
+
+        public void PopulateCardHistory(Card card)
+        {
+            CardHistory.Enqueue(card);
+            Save((nameof(CardHistory), CardHistory));
         }
 
         public void Win(short winnerPlayerNumber)
@@ -147,22 +158,25 @@ namespace LoveLetter.Core.Entities
         {
             var player = Players.FirstOrDefault(p => p.PlayerNumber == TurnPlayerNumber);
 
-            if (TurnPlayerNumber == Players.Count)
-            {
-                TurnPlayerNumber = 1;
-            }
-            else
-            {
-                TurnPlayerNumber++;
-            }
-
-            ReindexPlayers();
-            var resultOk = Save((nameof(TurnPlayerNumber), TurnPlayerNumber), (nameof(Players), Players));
-
-            if (player is not null && resultOk)
+            if (player is not null)
             {
                 player.CurrentCard = new Card(currentCard);
-                AuditItem.Append(Id, player, nameof(EndTurn), _adapter.Connection);
+                if (TurnPlayerNumber == Players.Count)
+                {
+                    TurnPlayerNumber = 1;
+                }
+                else
+                {
+                    TurnPlayerNumber++;
+                }
+
+                ReindexPlayers();
+                var resultOk = Save((nameof(TurnPlayerNumber), TurnPlayerNumber), (nameof(Players), Players));
+
+                if (resultOk)
+                {
+                    AuditItem.Append(Id, player, nameof(EndTurn), _adapter.Connection);
+                }
             }
         }
 

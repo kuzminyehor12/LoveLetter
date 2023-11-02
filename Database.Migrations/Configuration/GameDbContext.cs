@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using LoveLetter.Core.Constants;
 using LoveLetter.Core.Utils;
+using System.Data;
 
 namespace Database.Migrations.Configuration
 {
@@ -32,9 +33,14 @@ namespace Database.Migrations.Configuration
               .HasKey(e => e.Id);
 
             modelBuilder.Entity<GameStateEntity>()
+              .Property(e => e.Players)
+              .HasColumnType("Xml");
+
+            modelBuilder.Entity<GameStateEntity>()
               .HasOne(e => e.Lobby)
               .WithOne(e => e.State)
               .HasForeignKey<GameStateEntity>(e => e.Id)
+              .OnDelete(DeleteBehavior.Cascade)
               .HasConstraintName("FK_LobbyState")
               .IsRequired();
 
@@ -48,6 +54,7 @@ namespace Database.Migrations.Configuration
               .HasOne(e => e.GameState)
               .WithMany(e => e.AuditItems)
               .HasForeignKey(e => e.GameStateId)
+              .OnDelete(DeleteBehavior.Cascade)
               .HasConstraintName("FK_StateAuditItems")
               .IsRequired();
         }

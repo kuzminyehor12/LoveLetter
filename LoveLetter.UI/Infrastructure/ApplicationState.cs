@@ -12,6 +12,7 @@ namespace LoveLetter.UI.Infrastructure
         {
             CurrentLobby = null;
             CurrentGameState = null;
+            CardEvents = null;
             ApplicationEvents = new ApplicationEvents();
             Connection = new SqlConnection(ConfigurationUtils.GetConnectionString());
         }

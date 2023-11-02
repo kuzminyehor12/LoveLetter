@@ -1,8 +1,7 @@
 ﻿using LoveLetter.Core.Entities;
 using LoveLetter.Core.Exceptions;
+using LoveLetter.Core.Utils;
 using LoveLetter.UI.Infrastructure;
-using System.Data;
-using System.Threading;
 
 namespace LoveLetter.UI.Forms
 {
@@ -11,17 +10,30 @@ namespace LoveLetter.UI.Forms
         public LobbiesForm()
         {
             InitializeComponent();
+            ApplicationState.Instance.ApplicationEvents.OnGameStopped += GameForm_OnClosed;
         }
 
         private void LobbiesGrid_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
             try
             {
-                if (Guid.TryParse(LobbiesGrid.Rows[e.RowIndex].Cells[0].Value.ToString(), out var lobbyId))
+                if (string.IsNullOrEmpty(NicknameValue.Text))
+                {
+                    this.ThrowIssue("You have to enter nickname before starting to play game!");
+                    return;
+                }
+
+                if (Guid.TryParse(LobbiesGrid.Rows[e.RowIndex].Cells[0].Value.ToString(), out var lobbyId) 
+                    && Enum.TryParse(typeof(LobbyStatus), LobbiesGrid.Rows[e.RowIndex].Cells[1].Value.ToString(), out var lobbyStatus)
+                    && (LobbyStatus?)lobbyStatus == LobbyStatus.Open)
                 {
                     ApplicationState.Instance.CurrentLobby = Lobby.Join(lobbyId, NicknameValue.Text.Trim(), ApplicationState.Instance.Connection);
                     short yourPlayerNumber = (short)ApplicationState.Instance.CurrentLobby.Players.Count;
                     JoinWaitingRoom(yourPlayerNumber);
+                }
+                else
+                {
+                    this.ThrowIssue("Lobby is in progress! Try to find another one.");
                 }
             }
             catch (FullLobbyException)
@@ -38,6 +50,12 @@ namespace LoveLetter.UI.Forms
         {
             try
             {
+                if (string.IsNullOrEmpty(NicknameValue.Text))
+                {
+                    this.ThrowIssue("You have to enter nickname before starting to play game!");
+                    return;
+                }
+
                 ApplicationState.Instance.CurrentLobby = Lobby.CreateNew(NicknameValue.Text.Trim(), ApplicationState.Instance.Connection);
                 JoinWaitingRoom();
             }
@@ -55,7 +73,6 @@ namespace LoveLetter.UI.Forms
 
         private void LobbiesForm_Load(object sender, EventArgs e)
         {
-            ApplicationState.Instance.ApplicationEvents.OnGameStopped += GameForm_OnClosed;
             ApplicationState.Instance.Connection.Open();
             LobbiesGrid.DataSource = DataGridUtils.GetLobbyDataTable(ApplicationState.Instance.Connection);
         }

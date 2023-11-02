@@ -70,9 +70,9 @@
             this.NicknameLabel.Location = new System.Drawing.Point(10, 7);
             this.NicknameLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.NicknameLabel.Name = "NicknameLabel";
-            this.NicknameLabel.Size = new System.Drawing.Size(235, 28);
+            this.NicknameLabel.Size = new System.Drawing.Size(149, 28);
             this.NicknameLabel.TabIndex = 2;
-            this.NicknameLabel.Text = "Enter nickname(optional):";
+            this.NicknameLabel.Text = "Enter nickname:";
             // 
             // CreateLobbyBtn
             // 

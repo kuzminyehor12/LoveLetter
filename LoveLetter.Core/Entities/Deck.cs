@@ -18,6 +18,11 @@ namespace LoveLetter.Core.Entities
             Cards = new Queue<Card>(cardTypes.Select(type => new Card((CardType)type)));
         }
 
+        public void Enqueue(Card card)
+        {
+            Cards.Enqueue(card);
+        }
+
         public Card Dequeue()
         {
             return Cards.Dequeue();

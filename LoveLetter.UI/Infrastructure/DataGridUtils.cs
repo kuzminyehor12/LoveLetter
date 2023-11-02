@@ -15,7 +15,7 @@ namespace LoveLetter.UI.Infrastructure
             lobbies.Columns.Add(nameof(Lobby.Id));
             lobbies.Columns.Add(nameof(Lobby.Status));
             lobbies.Columns.Add(nameof(Lobby.Players));
-            lobbies.Columns.Add("PlayerCount");
+            lobbies.Columns.Add("PlayersCount");
             var command = LobbyQuery.SelectAll();
             
             using (var cmd = connection.CreateCommand())
@@ -25,10 +25,10 @@ namespace LoveLetter.UI.Infrastructure
                 {
                     while (reader.Read())
                     {
-                        var players = reader.IsDBNull(2) ? string.Empty : reader[2].ToString();
+                        var players = reader.IsDBNull(2) ? string.Empty : reader.GetString(2);
                         lobbies.Rows.Add(
-                            reader[0].ToString(),
-                            (LobbyStatus)Convert.ToInt16(reader[1]),
+                            reader.GetGuid(0),
+                            (LobbyStatus)reader.GetInt16(1),
                             players,
                             (players?.Split(',').Length ?? 0) + "/" + Constraints.MAX_PLAYER_NUMBER);
                     }
@@ -64,7 +64,23 @@ namespace LoveLetter.UI.Infrastructure
             return audit;
 
             string CreateAuditItem(SqlDataReader reader) =>
-                reader.IsDBNull(4) ? string.Empty : reader[4] + $" by player {reader[3]}({reader[2]}) at {reader[5]}";
+                reader.IsDBNull(4) ? string.Empty : reader.GetString(4) + $" by player {reader.GetInt16(3)}({reader.GetString(2)}) at {reader.GetDateTime(5)}";
+        }
+
+        public static List<string> LoadCardHistory(DataTable audit, ref int cardsLeft)
+        {
+            List<string> cardHistory = new List<string>();
+
+            foreach (var item in audit.Rows)
+            {
+                if (!string.IsNullOrEmpty(item.ToString()) && item.ToString().Contains(nameof(GameState.TakeCard)))
+                {
+                    cardHistory.Add(item.ToString());
+                    cardsLeft--;
+                }
+            }
+
+            return cardHistory;
         }
     }
 }

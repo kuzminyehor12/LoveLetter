@@ -31,6 +31,9 @@
             this.components = new System.ComponentModel.Container();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             this.GameSplitContainer = new System.Windows.Forms.SplitContainer();
+            this.CardsLeftLabel = new System.Windows.Forms.Label();
+            this.CardsCount = new System.Windows.Forms.Label();
+            this.RefreshIcon = new System.Windows.Forms.PictureBox();
             this.AdditionalCardPicture = new System.Windows.Forms.PictureBox();
             this.EndTurnBtn = new System.Windows.Forms.Button();
             this.PlayerValueLabel = new System.Windows.Forms.Label();
@@ -43,6 +46,7 @@
             this.AuditPage = new System.Windows.Forms.TabPage();
             this.AuditGrid = new System.Windows.Forms.DataGridView();
             this.CardHistoryPage = new System.Windows.Forms.TabPage();
+            this.CardHistoryListBox = new System.Windows.Forms.ListBox();
             this.Info = new System.Windows.Forms.TabPage();
             this.TurnPlayerNumberValue = new System.Windows.Forms.Label();
             this.TurnPlayerNumberLabel = new System.Windows.Forms.Label();
@@ -52,11 +56,11 @@
             this.YourNumberLabel = new System.Windows.Forms.Label();
             this.PollingTimer = new System.Windows.Forms.Timer(this.components);
             this.AfkTimer = new System.Windows.Forms.Timer(this.components);
-            this.RefreshIcon = new System.Windows.Forms.PictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.GameSplitContainer)).BeginInit();
             this.GameSplitContainer.Panel1.SuspendLayout();
             this.GameSplitContainer.Panel2.SuspendLayout();
             this.GameSplitContainer.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.RefreshIcon)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.AdditionalCardPicture)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.PlayerValueValue)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.PlayerNumberValue)).BeginInit();
@@ -65,8 +69,8 @@
             this.AuditTabControl.SuspendLayout();
             this.AuditPage.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.AuditGrid)).BeginInit();
+            this.CardHistoryPage.SuspendLayout();
             this.Info.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.RefreshIcon)).BeginInit();
             this.SuspendLayout();
             // 
             // GameSplitContainer
@@ -78,6 +82,8 @@
             // 
             // GameSplitContainer.Panel1
             // 
+            this.GameSplitContainer.Panel1.Controls.Add(this.CardsLeftLabel);
+            this.GameSplitContainer.Panel1.Controls.Add(this.CardsCount);
             this.GameSplitContainer.Panel1.Controls.Add(this.RefreshIcon);
             this.GameSplitContainer.Panel1.Controls.Add(this.AdditionalCardPicture);
             this.GameSplitContainer.Panel1.Controls.Add(this.EndTurnBtn);
@@ -96,6 +102,37 @@
             this.GameSplitContainer.SplitterWidth = 3;
             this.GameSplitContainer.TabIndex = 0;
             // 
+            // CardsLeftLabel
+            // 
+            this.CardsLeftLabel.AutoSize = true;
+            this.CardsLeftLabel.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.CardsLeftLabel.Location = new System.Drawing.Point(437, 9);
+            this.CardsLeftLabel.Name = "CardsLeftLabel";
+            this.CardsLeftLabel.Size = new System.Drawing.Size(98, 28);
+            this.CardsLeftLabel.TabIndex = 10;
+            this.CardsLeftLabel.Text = "Cards left:";
+            // 
+            // CardsCount
+            // 
+            this.CardsCount.AutoSize = true;
+            this.CardsCount.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.CardsCount.Location = new System.Drawing.Point(553, 9);
+            this.CardsCount.Name = "CardsCount";
+            this.CardsCount.Size = new System.Drawing.Size(23, 28);
+            this.CardsCount.TabIndex = 9;
+            this.CardsCount.Text = "0";
+            // 
+            // RefreshIcon
+            // 
+            this.RefreshIcon.Image = global::LoveLetter.UI.Properties.Resources.reload;
+            this.RefreshIcon.Location = new System.Drawing.Point(669, 3);
+            this.RefreshIcon.Name = "RefreshIcon";
+            this.RefreshIcon.Size = new System.Drawing.Size(38, 34);
+            this.RefreshIcon.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.RefreshIcon.TabIndex = 8;
+            this.RefreshIcon.TabStop = false;
+            this.RefreshIcon.Click += new System.EventHandler(this.RefreshIcon_Click);
+            // 
             // AdditionalCardPicture
             // 
             this.AdditionalCardPicture.Location = new System.Drawing.Point(385, 185);
@@ -105,6 +142,7 @@
             this.AdditionalCardPicture.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.AdditionalCardPicture.TabIndex = 7;
             this.AdditionalCardPicture.TabStop = false;
+            this.AdditionalCardPicture.Click += new System.EventHandler(this.AdditionalCardPicture_Click);
             // 
             // EndTurnBtn
             // 
@@ -116,6 +154,7 @@
             this.EndTurnBtn.TabIndex = 6;
             this.EndTurnBtn.Text = "End Turn";
             this.EndTurnBtn.UseVisualStyleBackColor = true;
+            this.EndTurnBtn.Click += new System.EventHandler(this.EndTurnBtn_Click);
             // 
             // PlayerValueLabel
             // 
@@ -139,7 +178,7 @@
             0,
             0});
             this.PlayerValueValue.Minimum = new decimal(new int[] {
-            1,
+            2,
             0,
             0,
             0});
@@ -147,7 +186,7 @@
             this.PlayerValueValue.Size = new System.Drawing.Size(96, 34);
             this.PlayerValueValue.TabIndex = 4;
             this.PlayerValueValue.Value = new decimal(new int[] {
-            1,
+            2,
             0,
             0,
             0});
@@ -191,10 +230,10 @@
             // DeckPicture
             // 
             this.DeckPicture.Image = global::LoveLetter.UI.Properties.Resources.Backside;
-            this.DeckPicture.Location = new System.Drawing.Point(424, 17);
+            this.DeckPicture.Location = new System.Drawing.Point(439, 42);
             this.DeckPicture.Margin = new System.Windows.Forms.Padding(2);
             this.DeckPicture.Name = "DeckPicture";
-            this.DeckPicture.Size = new System.Drawing.Size(266, 110);
+            this.DeckPicture.Size = new System.Drawing.Size(266, 128);
             this.DeckPicture.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.DeckPicture.TabIndex = 1;
             this.DeckPicture.TabStop = false;
@@ -208,6 +247,7 @@
             this.InitialCardPicture.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.InitialCardPicture.TabIndex = 0;
             this.InitialCardPicture.TabStop = false;
+            this.InitialCardPicture.Click += new System.EventHandler(this.InitialCardPicture_Click);
             // 
             // AuditTabControl
             // 
@@ -258,6 +298,7 @@
             // 
             // CardHistoryPage
             // 
+            this.CardHistoryPage.Controls.Add(this.CardHistoryListBox);
             this.CardHistoryPage.Location = new System.Drawing.Point(4, 29);
             this.CardHistoryPage.Margin = new System.Windows.Forms.Padding(2);
             this.CardHistoryPage.Name = "CardHistoryPage";
@@ -266,6 +307,15 @@
             this.CardHistoryPage.TabIndex = 1;
             this.CardHistoryPage.Text = "Card History";
             this.CardHistoryPage.UseVisualStyleBackColor = true;
+            // 
+            // CardHistoryListBox
+            // 
+            this.CardHistoryListBox.FormattingEnabled = true;
+            this.CardHistoryListBox.ItemHeight = 20;
+            this.CardHistoryListBox.Location = new System.Drawing.Point(3, 3);
+            this.CardHistoryListBox.Name = "CardHistoryListBox";
+            this.CardHistoryListBox.Size = new System.Drawing.Size(286, 404);
+            this.CardHistoryListBox.TabIndex = 0;
             // 
             // Info
             // 
@@ -336,24 +386,13 @@
             // 
             // PollingTimer
             // 
-            this.PollingTimer.Enabled = true;
             this.PollingTimer.Interval = 10000;
+            this.PollingTimer.Tick += new System.EventHandler(this.PollingTimer_Tick);
             // 
             // AfkTimer
             // 
             this.AfkTimer.Interval = 300000;
             this.AfkTimer.Tick += new System.EventHandler(this.AfkTimer_Tick);
-            // 
-            // RefreshIcon
-            // 
-            this.RefreshIcon.Image = global::LoveLetter.UI.Properties.Resources.reload;
-            this.RefreshIcon.Location = new System.Drawing.Point(652, 136);
-            this.RefreshIcon.Name = "RefreshIcon";
-            this.RefreshIcon.Size = new System.Drawing.Size(38, 34);
-            this.RefreshIcon.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
-            this.RefreshIcon.TabIndex = 8;
-            this.RefreshIcon.TabStop = false;
-            this.RefreshIcon.Click += new System.EventHandler(this.RefreshIcon_Click);
             // 
             // GameForm
             // 
@@ -364,11 +403,15 @@
             this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "GameForm";
             this.Text = "GameForm";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.GameForm_FormClosing);
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.GameForm_FormClosed);
+            this.Load += new System.EventHandler(this.GameForm_Load);
             this.GameSplitContainer.Panel1.ResumeLayout(false);
             this.GameSplitContainer.Panel1.PerformLayout();
             this.GameSplitContainer.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.GameSplitContainer)).EndInit();
             this.GameSplitContainer.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.RefreshIcon)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.AdditionalCardPicture)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.PlayerValueValue)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.PlayerNumberValue)).EndInit();
@@ -377,9 +420,9 @@
             this.AuditTabControl.ResumeLayout(false);
             this.AuditPage.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.AuditGrid)).EndInit();
+            this.CardHistoryPage.ResumeLayout(false);
             this.Info.ResumeLayout(false);
             this.Info.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.RefreshIcon)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -409,5 +452,8 @@
         private Label YourNumberLabel;
         private System.Windows.Forms.Timer AfkTimer;
         private PictureBox RefreshIcon;
+        private Label CardsCount;
+        private ListBox CardHistoryListBox;
+        private Label CardsLeftLabel;
     }
 }

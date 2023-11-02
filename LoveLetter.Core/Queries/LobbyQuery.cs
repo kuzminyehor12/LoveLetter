@@ -5,7 +5,7 @@ namespace LoveLetter.Core.Queries
 {
     public static class LobbyQuery
     {
-        public static string SelectAll() => $"SELECT * FROM {Tables.Lobbies} WHERE Status={(short)LobbyStatus.Open}";
+        public static string SelectAll() => $"SELECT * FROM {Tables.Lobbies} WHERE Status<>{(short)LobbyStatus.Closed}";
 
         public static string SelectById(Guid lobbyId) => $"SELECT * FROM {Tables.Lobbies} WHERE Id='{lobbyId}'";
 

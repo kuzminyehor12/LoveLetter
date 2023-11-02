@@ -9,6 +9,7 @@
 
     public enum CardType : short
     {
+        Unknown = 0,
         Guard = 1,
         Priest = 2,
         Baron = 3,

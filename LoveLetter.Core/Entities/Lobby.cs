@@ -21,11 +21,11 @@ namespace LoveLetter.Core.Entities
         {
             if (reader.Read())
             {
-                Id = Guid.Parse(reader[0]?.ToString() ?? string.Empty);
-                Status = (LobbyStatus)Convert.ToInt16(reader[1]);
-                Players = reader.IsDBNull(2) || string.IsNullOrEmpty(reader[2].ToString()) ? 
+                Id = reader.GetGuid(0);
+                Status = (LobbyStatus)reader.GetInt16(1);
+                Players = reader.IsDBNull(2) || string.IsNullOrEmpty(reader.GetString(2)) ? 
                     new List<string>() 
-                    : reader[2].ToString().Split(',').ToList();
+                    : reader.GetString(2).Split(',').ToList();
             }
         }
 

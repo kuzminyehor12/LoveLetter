@@ -9,7 +9,7 @@ namespace Database.Migrations.Entities
 
         public virtual ICollection<AuditItemEntity>? AuditItems { get; set; }
 
-        public string Players { get; set; } = string.Empty;
+        public string? Players { get; set; } = string.Empty;
 
         public string Deck { get; set; } = string.Empty;
 
@@ -22,5 +22,7 @@ namespace Database.Migrations.Entities
         public DateTime StartDate { get; set; }
 
         public DateTime? EndDate { get; set; }
+
+        public string CardHistory { get; set; } = string.Empty;
     }
 }

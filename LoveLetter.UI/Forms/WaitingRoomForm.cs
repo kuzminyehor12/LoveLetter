@@ -7,6 +7,7 @@ namespace LoveLetter.UI.Forms
 {
     public partial class WaitingRoomForm : Form
     {
+        private bool _joinedGame = false;
         private short _yourPlayerNumber;
         public short YourPlayerNumber
         {
@@ -16,9 +17,9 @@ namespace LoveLetter.UI.Forms
             }
             private set
             {
-                if (value > 4)
+                if (value > Constraints.MAX_PLAYER_NUMBER)
                 {
-                    throw new Exception();
+                    throw new FullLobbyException();
                 }
 
                 _yourPlayerNumber = value;
@@ -28,11 +29,11 @@ namespace LoveLetter.UI.Forms
         {
             YourPlayerNumber = yourPlayerNumber;
             ApplicationState.Instance.CurrentPlayer = new Player(yourPlayerNumber, playerNickname);
-            ApplicationState.Instance.ApplicationEvents.OnGameStopped += ApplicationEvents_OnGameStopped;
+            ApplicationState.Instance.ApplicationEvents.OnGameStopped += ApplicationEvents_WaitingRoom_OnGameStopped;
             InitializeComponent();
         }
 
-        private void ApplicationEvents_OnGameStopped(object? sender, EventArgs e)
+        private void ApplicationEvents_WaitingRoom_OnGameStopped(object? sender, EventArgs e)
         {
             Close();
         }
@@ -77,6 +78,7 @@ namespace LoveLetter.UI.Forms
         private void JoinGame()
         {
             new GameForm().Show();
+            _joinedGame = true;
             Close();
         }
 
@@ -108,6 +110,7 @@ namespace LoveLetter.UI.Forms
 
                 if (ApplicationState.Instance.ApplicationEvents is not null)
                 {
+                    _joinedGame = false;
                     ApplicationState.Instance.ApplicationEvents.OnGameStoppedHandler(e);
                 }
             }
@@ -162,8 +165,12 @@ namespace LoveLetter.UI.Forms
 
         private void WaitingRoomForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            ApplicationState.Instance.CurrentLobby?.Leave(ApplicationState.Instance.CurrentPlayer?.Nickname ?? string.Empty);
-            ApplicationState.Instance.ApplicationEvents.OnGameStopped -= ApplicationEvents_OnGameStopped;
+            if (!_joinedGame)
+            {
+                ApplicationState.Instance.CurrentLobby?.Leave(ApplicationState.Instance.CurrentPlayer?.Nickname ?? string.Empty);
+            }
+            
+            ApplicationState.Instance.ApplicationEvents.OnGameStopped -= ApplicationEvents_WaitingRoom_OnGameStopped;
             PollingTimer.Stop();
         }
 

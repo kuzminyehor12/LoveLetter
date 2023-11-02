@@ -30,22 +30,24 @@ namespace LoveLetter.Core.Utils
         }
         public static string PlayersToXml(List<Player> players)
         {
-            var serializer = new XmlSerializer(typeof(List<Player>));
             var xml = string.Empty;
-
-            using (var sw = new StringWriter())
+            var settings = new XmlWriterSettings
             {
-                using (XmlWriter writer = XmlWriter.Create(sw))
-                {
-                    serializer.Serialize(writer, players);
-                    xml = sw.ToString();
-                }
+                OmitXmlDeclaration = true
+            };
+
+            using (var stringWriter = new StringWriter())
+            using (var xmlWriter = XmlWriter.Create(stringWriter, settings))
+            {
+                var serializer = new XmlSerializer(typeof(PlayersList));
+                serializer.Serialize(xmlWriter, players);
+                xml = stringWriter.ToString();
             }
 
             return xml;
         }
 
         public static string ParseDeck(Deck deck) =>
-            string.Join(',', deck.Cards.Select(c => c.CardType));
+            string.Join(',', deck.Cards.Select(c => (short)c.CardType));
     }
 }

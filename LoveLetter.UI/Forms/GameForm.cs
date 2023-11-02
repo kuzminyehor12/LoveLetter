@@ -2,8 +2,6 @@
 using LoveLetter.Core.Entities;
 using LoveLetter.Core.Utils;
 using LoveLetter.UI.Infrastructure;
-using LoveLetter.UI.Properties;
-using Newtonsoft.Json.Linq;
 using System.Data;
 
 namespace LoveLetter.UI.Forms
@@ -34,7 +32,7 @@ namespace LoveLetter.UI.Forms
             ApplicationState.Instance.CardEvents.OnKing += CardEvents_OnKing;
             ApplicationState.Instance.CardEvents.OnCountess += CardEvents_OnCountess;
             ApplicationState.Instance.CardEvents.OnPrincess += CardEvents_OnPrincess;
-            ApplicationState.Instance.ApplicationEvents.OnGameStopped += ApplicationEvents_OnGameStopped;
+            ApplicationState.Instance.ApplicationEvents.OnGameStopped += ApplicationEvents_GameForm_OnGameStopped;
 
             InitialCardPicture.Paint += InitialCardPicture_Paint;
             AdditionalCardPicture.Paint += AdditionalCardPicture_Paint;
@@ -46,6 +44,12 @@ namespace LoveLetter.UI.Forms
             if (sender is PictureBox pictureBox)
             {
                 var borderColor = _toggleBorders ? Color.Green : Color.Transparent;
+
+                if (PollingTimer.Enabled)
+                {
+                    borderColor = Color.Transparent;
+                }
+
                 Pen borderPen = new Pen(borderColor, BORDER_WIDTH);
                 Rectangle borderRect = pictureBox.ClientRectangle;
                 borderRect.Inflate(-1, -1);
@@ -59,6 +63,12 @@ namespace LoveLetter.UI.Forms
             if (sender is PictureBox pictureBox)
             {
                 var borderColor = !_toggleBorders ? Color.Green : Color.Transparent;
+
+                if (PollingTimer.Enabled)
+                {
+                    borderColor = Color.Transparent;
+                }
+               
                 Pen borderPen = new Pen(borderColor, BORDER_WIDTH);
                 Rectangle borderRect = pictureBox.ClientRectangle;
                 borderRect.Inflate(-1, -1);
@@ -67,7 +77,7 @@ namespace LoveLetter.UI.Forms
             }
         }
 
-        private void ApplicationEvents_OnGameStopped(object? sender, EventArgs e)
+        private void ApplicationEvents_GameForm_OnGameStopped(object? sender, EventArgs e)
         {
             Close();
         }
@@ -97,6 +107,28 @@ namespace LoveLetter.UI.Forms
 
                 var args = new CardEventArgs((short)PlayerNumberValue.Value, (short)PlayerValueValue.Value);
                 SelectedCard.Effect(cardEvents, args);
+
+                if (AdditionalCard is not null)
+                {
+                    if (SelectedCard == AdditionalCard)
+                    {
+                        AdditionalCard = null;
+                    }
+                    else
+                    {
+                        InitialCard = new Card(AdditionalCard);
+                        InitialCardPicture.Image = AdditionalCardPicture.Image;
+                    }
+
+                    AdditionalCardPicture.Image = null;
+                    AdditionalCardPicture.Invalidate();
+                    InitialCardPicture.Invalidate();
+                }
+
+                gameState.PopulateCardHistory(SelectedCard);
+                PollingTimer.Enabled = true;
+                EndTurnBtn.Enabled = false;
+
                 AuditItem.Append(
                     gameState.Id, player, 
                     string.Join(" ", SelectedCard.CardType.ToString(), nameof(Card.Effect)),
@@ -128,33 +160,42 @@ namespace LoveLetter.UI.Forms
                 Image img = DeckPicture.Image;
                 img.RotateFlip(RotateFlipType.Rotate90FlipNone);
                 DeckPicture.Image = img;
+                DeckPicture.SizeMode = PictureBoxSizeMode.Zoom;
 
-                PlayerNumberValue.Maximum = Constraints.MAX_PLAYER_NUMBER;
+                PlayerNumberValue.Maximum = gameState.Players.Count;
                 PlayerValueValue.Maximum = Enum.GetValues(typeof(CardType)).Length;
 
                 YourNicknameValue.Text = player.Nickname;
                 YourPlayerNumberValue.Text = player.PlayerNumber.ToString();
                 TurnPlayerNumberValue.Text = gameState.TurnPlayerNumber.ToString();
 
-                InitialCard = gameState.TakeCard();
-                InitialCardPicture.Image = GetImage(InitialCard);
+                CardsCount.Text = Constraints.INITIAL_CARDS_COUNT.ToString();
 
-                AuditGrid.DataSource = DataGridUtils.LoadAudit(gameState.Id, ApplicationState.Instance.Connection);
+                InitialCard = gameState.TakeCard(player);
+                InitialCardPicture.Image = ImageUtils.GetImage(InitialCard);
+
+                SelectedCard = new Card(InitialCard);
 
                 if (gameState.InTurn(player.PlayerNumber))
                 {
-                   AdditionalCard = gameState.TakeCard();
-                   AdditionalCardPicture.Image = GetImage(AdditionalCard);
+                   AdditionalCard = gameState.TakeCard(player);
+                   AdditionalCardPicture.Image = ImageUtils.GetImage(AdditionalCard);
                 }
+                else
+                {
+                    EndTurnBtn.Enabled = false;
+                    PollingTimer.Enabled = true;
+                }
+
+                CardsCount.Text = (Constraints.INITIAL_CARDS_COUNT - gameState.CardHistory.Cards.Count() - 3).ToString();
+                RefreshCardHistory(gameState);
+                AuditGrid.DataSource = DataGridUtils.LoadAudit(gameState.Id, ApplicationState.Instance.Connection);
             }
             catch (Exception ex)
             {
                 this.ThrowError(ex);
             }
         }
-
-        private Image? GetImage(Card card) =>
-            typeof(Resources).GetProperty(card.CardType.ToString())?.GetValue(new Resources()) as Image ?? null;
 
         private void PollingTimer_Tick(object sender, EventArgs e)
         {
@@ -199,6 +240,17 @@ namespace LoveLetter.UI.Forms
                     }
                 }
 
+                if (gameState.Players.Count == 1)
+                {
+                    lobby.Close();
+                    this.SendResultMessage(gameState.Players.First().PlayerNumber);
+
+                    if (ApplicationState.Instance.ApplicationEvents is not null)
+                    {
+                        ApplicationState.Instance.ApplicationEvents.OnGameStoppedHandler(e);
+                    }
+                }
+
                 if (!gameState.Players.Any(p => p.PlayerNumber == player.PlayerNumber))
                 {
                     lobby.Leave(player.Nickname);
@@ -209,13 +261,16 @@ namespace LoveLetter.UI.Forms
                         ApplicationState.Instance.ApplicationEvents.OnGameStoppedHandler(e);
                     }
                 }
-                
+
+                PlayerNumberValue.Maximum = gameState.Players.Count;
                 TurnPlayerNumberValue.Text = gameState.TurnPlayerNumber.ToString();
 
                 if (gameState.InTurn(player.PlayerNumber))
                 {
-                    AdditionalCard = gameState.TakeCard();
-                    AdditionalCardPicture.Image = GetImage(AdditionalCard);
+                    AdditionalCard = gameState.TakeCard(player);
+                    AdditionalCardPicture.Image = ImageUtils.GetImage(AdditionalCard);
+                    PollingTimer.Enabled = false;
+                    EndTurnBtn.Enabled = true;
                 }
                 else
                 {
@@ -235,12 +290,11 @@ namespace LoveLetter.UI.Forms
                 if (IsCountessWithKingOrPrince(AdditionalCard, InitialCard))
                 {
                     SelectedCard = new Card(AdditionalCard);
-                    this.AlertMessage("Countess is your selected card because of Prince or King in your hand");
+                    this.AlertMessage($"{CardType.Countess} is your selected card because of {CardType.Prince} or {CardType.King} in your hand");
                     return;
                 }
 
                 SelectedCard = new Card(InitialCard);
-                InitialCard = new Card(AdditionalCard);
 
                 _toggleBorders = false;
                 InitialCardPicture.Invalidate();
@@ -248,15 +302,14 @@ namespace LoveLetter.UI.Forms
             }
         }
 
-        private void AdditionalCardPicture_Click(object sender, EventArgs e)
+        private void AdditionalCardPicture_Click(object sender, EventArgs e)    
         {
             if (AdditionalCard is not null)
             {
                 if (IsCountessWithKingOrPrince(InitialCard, AdditionalCard))
                 {
                     SelectedCard = new Card(InitialCard);
-                    InitialCard = new Card(AdditionalCard);
-                    this.AlertMessage("Countess is your selected card because of Prince or King in your hand");
+                    this.AlertMessage($"{CardType.Countess} is your selected card because of {CardType.Prince} or {CardType.King} in your hand");
                     return;
                 }
 
@@ -290,7 +343,15 @@ namespace LoveLetter.UI.Forms
                 }
 
                 gameState.Lose(player);
-                gameState.EndTurn(InitialCard);
+
+                if (AdditionalCard is not null && SelectedCard == InitialCard)
+                {
+                    gameState.EndTurn(AdditionalCard);
+                }
+                else
+                {
+                    gameState.EndTurn(InitialCard);
+                }
             }
             catch (Exception ex)
             {
@@ -315,7 +376,14 @@ namespace LoveLetter.UI.Forms
                     throw new NullReferenceException(nameof(player));
                 }
 
-                gameState.EndTurn(InitialCard);
+                if (AdditionalCard is not null && SelectedCard == InitialCard)
+                {
+                    gameState.EndTurn(AdditionalCard);
+                }
+                else
+                {
+                    gameState.EndTurn(InitialCard);
+                }
             }
             catch (Exception ex)
             {
@@ -353,13 +421,20 @@ namespace LoveLetter.UI.Forms
                     }
 
                     AuditItem.Append(gameState.Id, player, 
-                        string.Join(" ", nameof(FindOpponent), opponent.PlayerNumber),
+                        string.Join(" ", nameof(FindOpponent), "Picked player: " + opponent.Nickname),
                         ApplicationState.Instance.Connection);
 
                     gameState.SwapCards(player.PlayerNumber, opponent);
                 }
 
-                gameState.EndTurn(InitialCard);
+                if (AdditionalCard is not null && SelectedCard == InitialCard)
+                {
+                    gameState.EndTurn(AdditionalCard);
+                }
+                else
+                {
+                    gameState.EndTurn(InitialCard);
+                }
             }
             catch (Exception ex)
             {
@@ -397,9 +472,9 @@ namespace LoveLetter.UI.Forms
                     }
 
                     AuditItem.Append(
-                        gameState.Id, player, 
-                        string.Join(" ", nameof(FindOpponent), opponent.PlayerNumber),
-                        ApplicationState.Instance.Connection);
+                     gameState.Id, player,
+                     string.Join(" ", nameof(FindOpponent), "Picked player: " + opponent.Nickname),
+                     ApplicationState.Instance.Connection);
 
                     if (opponent.CurrentCard == CardType.Princess)
                     {
@@ -407,7 +482,14 @@ namespace LoveLetter.UI.Forms
                     }
                 }
 
-                gameState.EndTurn(InitialCard);
+                if (AdditionalCard is not null && SelectedCard == InitialCard)
+                {
+                    gameState.EndTurn(AdditionalCard);
+                }
+                else
+                {
+                    gameState.EndTurn(InitialCard);
+                }
             }
             catch (Exception ex)
             {
@@ -440,7 +522,14 @@ namespace LoveLetter.UI.Forms
                     gameState.Save((nameof(GameState.Players), gameState.Players));
                 }
 
-                gameState.EndTurn(InitialCard);
+                if (AdditionalCard is not null && SelectedCard == InitialCard)
+                {
+                    gameState.EndTurn(AdditionalCard);
+                }
+                else
+                {
+                    gameState.EndTurn(InitialCard);
+                }
             }
             catch (Exception ex)
             {
@@ -484,9 +573,9 @@ namespace LoveLetter.UI.Forms
                     }
 
                     AuditItem.Append(
-                        gameState.Id, player, 
-                        string.Join(" ", nameof(FindOpponent), opponent.PlayerNumber), 
-                        ApplicationState.Instance.Connection);
+                      gameState.Id, player,
+                      string.Join(" ", nameof(FindOpponent), "Picked player: " + opponent.Nickname),
+                      ApplicationState.Instance.Connection);
 
                     if (InitialCard > opponent.CurrentCard)
                     {
@@ -499,7 +588,14 @@ namespace LoveLetter.UI.Forms
                     }
                 }
 
-                gameState.EndTurn(InitialCard);
+                if (AdditionalCard is not null && SelectedCard == InitialCard)
+                {
+                    gameState.EndTurn(AdditionalCard);
+                }
+                else
+                {
+                    gameState.EndTurn(InitialCard);
+                }
             }
             catch (Exception ex)
             {
@@ -537,14 +633,21 @@ namespace LoveLetter.UI.Forms
                     }
 
                     AuditItem.Append(
-                        gameState.Id, player, 
-                        string.Join(" ", nameof(FindOpponent), opponent.PlayerNumber),
-                        ApplicationState.Instance.Connection);
+                      gameState.Id, player,
+                      string.Join(" ", nameof(FindOpponent), "Picked player: " + opponent.Nickname),
+                      ApplicationState.Instance.Connection);
 
                     this.AlertMessage($"You revealed opponents`s card. His card type is {opponent.CurrentCard}");
                 }
 
-                gameState.EndTurn(InitialCard);
+                if (AdditionalCard is not null && SelectedCard == InitialCard)
+                {
+                    gameState.EndTurn(AdditionalCard);
+                }
+                else
+                {
+                    gameState.EndTurn(InitialCard);
+                }
 
             }
             catch (Exception ex)
@@ -572,8 +675,15 @@ namespace LoveLetter.UI.Forms
 
                 var opponent = gameState.Players.FirstOrDefault(p => p.PlayerNumber == e.PlayerNumber);
 
+                
                 if (opponent is not null)
                 {
+                    if (opponent.PlayerNumber == player.PlayerNumber)
+                    {
+                        this.ThrowIssue("You cannot choose yourself when playing " + CardType.Guard.ToString());
+                        return;
+                    }
+
                     opponent = FindOpponent(gameState, player, opponent);
 
                     if (opponent is null)
@@ -584,7 +694,7 @@ namespace LoveLetter.UI.Forms
 
                     AuditItem.Append(
                         gameState.Id, player, 
-                        string.Join(" ", nameof(FindOpponent), opponent.PlayerNumber, e.CardType), 
+                        string.Join(" ", nameof(FindOpponent), "Picked player: " + opponent.Nickname, "Picked card: " + e.CardType), 
                         ApplicationState.Instance.Connection);
 
                     if (e.CardType == (short)opponent.CurrentCard)
@@ -599,7 +709,14 @@ namespace LoveLetter.UI.Forms
                     }
                     else
                     {
-                        gameState.EndTurn(InitialCard);
+                        if (AdditionalCard is not null && SelectedCard == InitialCard)
+                        {
+                            gameState.EndTurn(AdditionalCard);
+                        }
+                        else
+                        {
+                            gameState.EndTurn(InitialCard);
+                        }
                     }
                 }
             }
@@ -613,7 +730,7 @@ namespace LoveLetter.UI.Forms
         {
             while (!opponent.Available)
             {
-                if (gameState.Players.Any(p => p.Available && p.PlayerNumber != player.PlayerNumber))
+                if (!gameState.Players.Any(p => p.Available && p.PlayerNumber != player.PlayerNumber))
                 {
                     return null;
                 }
@@ -646,6 +763,8 @@ namespace LoveLetter.UI.Forms
                 ApplicationState.Instance.CardEvents.OnPrincess -= CardEvents_OnPrincess;
             }
 
+            ApplicationState.Instance.CurrentGameState = null;
+            ApplicationState.Instance.CurrentLobby = null;
             ApplicationState.Instance.CardEvents = null;
         }
 
@@ -689,24 +808,6 @@ namespace LoveLetter.UI.Forms
 
         private void PlayerNumberValue_ValueChanged(object sender, EventArgs e)
         {
-            var gameState = ApplicationState.Instance.CurrentGameState;
-
-            if (gameState is null)
-            {
-                throw new NullReferenceException(nameof(gameState));
-            }
-
-            var opponents = gameState.Players.Where(p => p.Available);
-
-            if (!opponents.Any(o => o.PlayerNumber == (short)PlayerNumberValue.Value))
-            {
-                this.AlertMessage("You cannot choose this player because he used " + CardType.Handmaid);
-                PlayerNumberValue.Value = PlayerNumberValue.Minimum;
-            }
-        }
-
-        private void RefreshIcon_Click(object sender, EventArgs e)
-        {
             try
             {
                 var gameState = ApplicationState.Instance.CurrentGameState;
@@ -716,13 +817,58 @@ namespace LoveLetter.UI.Forms
                     throw new NullReferenceException(nameof(gameState));
                 }
 
-                AuditGrid.DataSource = DataGridUtils.LoadAudit(gameState.Id, ApplicationState.Instance.Connection);
-                AuditGrid.Update();
-                AuditGrid.Refresh();
+                var opponents = gameState.Players.Where(p => p.Available);
+
+                if (!opponents.Any(o => o.PlayerNumber == (short)PlayerNumberValue.Value))
+                {
+                    this.AlertMessage("You cannot choose this player because he used " + CardType.Handmaid.ToString());
+                    PlayerNumberValue.Value = PlayerNumberValue.Minimum;
+                }
             }
             catch (Exception ex)
             {
                 this.ThrowError(ex);
+            }
+        }
+
+        private void RefreshIcon_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var gameState = ApplicationState.Instance.CurrentGameState;
+                var player = ApplicationState.Instance.CurrentPlayer;
+
+                if (gameState is null)
+                {
+                    throw new NullReferenceException(nameof(gameState));
+                }
+
+                if (player is null)
+                {
+                    throw new NullReferenceException(nameof(player));
+                }
+
+                AuditGrid.DataSource = DataGridUtils.LoadAudit(gameState.Id, ApplicationState.Instance.Connection);
+                AuditGrid.Update();
+                AuditGrid.Refresh();
+
+                RefreshCardHistory(gameState);
+
+                CardsCount.Text = (Constraints.INITIAL_CARDS_COUNT - gameState.CardHistory.Cards.Count() - 3).ToString();
+            }
+            catch (Exception ex)
+            {
+                this.ThrowError(ex);
+            }
+        }
+
+        private void RefreshCardHistory(GameState gameState)
+        {
+            CardHistoryListBox.Items.Clear();
+
+            foreach (var card in gameState.CardHistory.Cards)
+            {
+                CardHistoryListBox.Items.Add($"{gameState.CardHistory.Cards.ToList().IndexOf(card) + 1}: {card.CardType} was played");
             }
         }
     }
