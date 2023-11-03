@@ -29,7 +29,7 @@ namespace LoveLetter.UI.Forms
                 {
                     ApplicationState.Instance.CurrentLobby = Lobby.Join(lobbyId, NicknameValue.Text.Trim(), ApplicationState.Instance.Connection);
                     short yourPlayerNumber = (short)ApplicationState.Instance.CurrentLobby.Players.Count;
-                    JoinWaitingRoom(yourPlayerNumber);
+                    JoinWaitingRoom(yourPlayerNumber, false);
                 }
                 else
                 {
@@ -57,7 +57,7 @@ namespace LoveLetter.UI.Forms
                 }
 
                 ApplicationState.Instance.CurrentLobby = Lobby.CreateNew(NicknameValue.Text.Trim(), ApplicationState.Instance.Connection);
-                JoinWaitingRoom();
+                JoinWaitingRoom(isHost: true);
             }
             catch (Exception ex)
             {
@@ -65,9 +65,9 @@ namespace LoveLetter.UI.Forms
             }
         }
 
-        private void JoinWaitingRoom(short yourNumber = 1)
+        private void JoinWaitingRoom(short yourNumber = 1, bool isHost = false)
         {
-            new WaitingRoomForm(NicknameValue.Text.Trim(), yourNumber).Show();
+            new WaitingRoomForm(NicknameValue.Text.Trim(), isHost, yourNumber).Show();
             Hide();
         }
 
@@ -93,6 +93,15 @@ namespace LoveLetter.UI.Forms
             LobbiesGrid.DataSource = DataGridUtils.GetLobbyDataTable(ApplicationState.Instance.Connection);
             LobbiesGrid.Update();
             LobbiesGrid.Refresh();
+        }
+
+        private void LobbiesTimer_Tick(object sender, EventArgs e)
+        {
+            LobbiesTimer.Stop();
+            LobbiesGrid.DataSource = DataGridUtils.GetLobbyDataTable(ApplicationState.Instance.Connection);
+            LobbiesGrid.Update();
+            LobbiesGrid.Refresh();
+            LobbiesTimer.Start();
         }
     }
 }

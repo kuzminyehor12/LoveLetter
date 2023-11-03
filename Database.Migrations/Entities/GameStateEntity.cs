@@ -24,5 +24,7 @@ namespace Database.Migrations.Entities
         public DateTime? EndDate { get; set; }
 
         public string CardHistory { get; set; } = string.Empty;
+
+        public bool Locked { get; set; } = false;
     }
 }

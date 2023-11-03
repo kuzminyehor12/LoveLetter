@@ -4,21 +4,19 @@ using Microsoft.Data.SqlClient;
 
 namespace LoveLetter.Core.Adapters
 {
-    public class LobbySqlAdapter : ISqlDataAdapter
+    public class LobbySqlAdapter : DomainSqlDataAdapter
     {
-        public SqlConnection Connection { get; }
-
-        public LobbySqlAdapter()
+        public LobbySqlAdapter() : base()
         {
-            Connection = new SqlConnection(ConfigurationUtils.GetConnectionString());
+
         }
 
-        public LobbySqlAdapter(SqlConnection connection)
+        public LobbySqlAdapter(SqlConnection connection) : base(connection)
         {
-            Connection = connection;
+
         }
 
-        public DomainEntity Populate(string command)
+        public override DomainEntity Populate(string command)
         {
             using (var cmd = Connection.CreateCommand())
             {
@@ -28,15 +26,6 @@ namespace LoveLetter.Core.Adapters
                 {
                     return new Lobby(reader);
                 }
-            }
-        }
-
-        public void SaveChanges(string command)
-        {
-            using (var cmd = Connection.CreateCommand())
-            {
-                cmd.CommandText = command;
-                cmd.ExecuteNonQuery();
             }
         }
     }

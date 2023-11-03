@@ -2,7 +2,9 @@
 using LoveLetter.Core.Entities;
 using LoveLetter.Core.Utils;
 using LoveLetter.UI.Infrastructure;
+using System.ComponentModel;
 using System.Data;
+using System.Numerics;
 
 namespace LoveLetter.UI.Forms
 {
@@ -32,7 +34,6 @@ namespace LoveLetter.UI.Forms
             ApplicationState.Instance.CardEvents.OnKing += CardEvents_OnKing;
             ApplicationState.Instance.CardEvents.OnCountess += CardEvents_OnCountess;
             ApplicationState.Instance.CardEvents.OnPrincess += CardEvents_OnPrincess;
-            ApplicationState.Instance.ApplicationEvents.OnGameStopped += ApplicationEvents_GameForm_OnGameStopped;
 
             InitialCardPicture.Paint += InitialCardPicture_Paint;
             AdditionalCardPicture.Paint += AdditionalCardPicture_Paint;
@@ -77,11 +78,6 @@ namespace LoveLetter.UI.Forms
             }
         }
 
-        private void ApplicationEvents_GameForm_OnGameStopped(object? sender, EventArgs e)
-        {
-            Close();
-        }
-
         private void EndTurnBtn_Click(object sender, EventArgs e)
         {
             try
@@ -105,6 +101,7 @@ namespace LoveLetter.UI.Forms
                     throw new NullReferenceException(nameof(player));
                 }
 
+                gameState = GameState.Fetch(gameState.Id, ApplicationState.Instance.Connection);
                 var args = new CardEventArgs((short)PlayerNumberValue.Value, (short)PlayerValueValue.Value);
                 SelectedCard.Effect(cardEvents, args);
 
@@ -118,6 +115,15 @@ namespace LoveLetter.UI.Forms
                     {
                         InitialCard = new Card(AdditionalCard);
                         InitialCardPicture.Image = AdditionalCardPicture.Image;
+                    }
+
+                    gameState = GameState.Fetch(gameState.Id, ApplicationState.Instance.Connection);
+                    var playerToUpdate = gameState.Players.FirstOrDefault(p => p.PlayerNumber == player.PlayerNumber);
+
+                    if (playerToUpdate is not null)
+                    {
+                        playerToUpdate.CurrentCard = InitialCard;
+                        gameState.Save((nameof(GameState.Players), gameState.Players));
                     }
 
                     AdditionalCardPicture.Image = null;
@@ -187,7 +193,7 @@ namespace LoveLetter.UI.Forms
                     PollingTimer.Enabled = true;
                 }
 
-                CardsCount.Text = (Constraints.INITIAL_CARDS_COUNT - gameState.CardHistory.Cards.Count() - 3).ToString();
+                CardsCount.Text = GetCardsCount(gameState).ToString();
                 RefreshCardHistory(gameState);
                 AuditGrid.DataSource = DataGridUtils.LoadAudit(gameState.Id, ApplicationState.Instance.Connection);
             }
@@ -196,6 +202,9 @@ namespace LoveLetter.UI.Forms
                 this.ThrowError(ex);
             }
         }
+
+        private int GetCardsCount(GameState gameState) =>
+            Constraints.INITIAL_CARDS_COUNT - gameState.CardHistory.Cards.Count() - gameState.Players.Count - 1;
 
         private void PollingTimer_Tick(object sender, EventArgs e)
         {
@@ -208,7 +217,8 @@ namespace LoveLetter.UI.Forms
 
                 if (lobby is null)
                 {
-                    throw new NullReferenceException(nameof(lobby));
+                    Close();
+                    return;
                 }
 
                 if (player is null)
@@ -218,6 +228,13 @@ namespace LoveLetter.UI.Forms
 
                 ApplicationState.Instance.CurrentGameState = GameState.Fetch(lobby.Id, ApplicationState.Instance.Connection);
                 var gameState = ApplicationState.Instance.CurrentGameState;
+
+                if (gameState is null)
+                {
+                    PollingTimer.Start();
+                    return;
+                }
+
                 player = gameState.Players.FirstOrDefault(p => p.Nickname == player.Nickname);
 
                 if (player is null)
@@ -233,37 +250,29 @@ namespace LoveLetter.UI.Forms
                 {
                     lobby.Close();
                     this.SendResultMessage(gameState.WinnerPlayerNumber.Value);
-
-                    if (ApplicationState.Instance.ApplicationEvents is not null)
-                    {
-                        ApplicationState.Instance.ApplicationEvents.OnGameStoppedHandler(e);
-                    }
+                    Close();
                 }
 
                 if (gameState.Players.Count == 1)
                 {
                     lobby.Close();
                     this.SendResultMessage(gameState.Players.First().PlayerNumber);
-
-                    if (ApplicationState.Instance.ApplicationEvents is not null)
-                    {
-                        ApplicationState.Instance.ApplicationEvents.OnGameStoppedHandler(e);
-                    }
+                    Close();
                 }
 
                 if (!gameState.Players.Any(p => p.PlayerNumber == player.PlayerNumber))
                 {
                     lobby.Leave(player.Nickname);
                     this.LoseMessage();
-
-                    if (ApplicationState.Instance.ApplicationEvents is not null)
-                    {
-                        ApplicationState.Instance.ApplicationEvents.OnGameStoppedHandler(e);
-                    }
+                    Close();
                 }
 
                 PlayerNumberValue.Maximum = gameState.Players.Count;
                 TurnPlayerNumberValue.Text = gameState.TurnPlayerNumber.ToString();
+                CardsCount.Text = GetCardsCount(gameState).ToString();
+
+                InitialCard = new Card(player.CurrentCard);
+                InitialCardPicture.Image = ImageUtils.GetImage(InitialCard);
 
                 if (gameState.InTurn(player.PlayerNumber))
                 {
@@ -276,6 +285,8 @@ namespace LoveLetter.UI.Forms
                 {
                     PollingTimer.Start();
                 }
+
+                RefreshCardHistory(gameState);
             }
             catch (Exception ex)
             {
@@ -408,6 +419,7 @@ namespace LoveLetter.UI.Forms
                     throw new NullReferenceException(nameof(player));
                 }
 
+                gameState = GameState.Fetch(gameState.Id, ApplicationState.Instance.Connection);
                 var opponent = gameState.Players.FirstOrDefault(p => p.PlayerNumber == e.PlayerNumber);
 
                 if (opponent is not null)
@@ -427,6 +439,7 @@ namespace LoveLetter.UI.Forms
                     gameState.SwapCards(player.PlayerNumber, opponent);
                 }
 
+                gameState = GameState.Fetch(gameState.Id, ApplicationState.Instance.Connection);
                 if (AdditionalCard is not null && SelectedCard == InitialCard)
                 {
                     gameState.EndTurn(AdditionalCard);
@@ -448,6 +461,13 @@ namespace LoveLetter.UI.Forms
             {
                 var gameState = ApplicationState.Instance.CurrentGameState;
                 var player = ApplicationState.Instance.CurrentPlayer;
+                var lobby = ApplicationState.Instance.CurrentLobby;
+
+                if (lobby is null)
+                {
+                    Close();
+                    return;
+                }
 
                 if (gameState is null)
                 {
@@ -459,6 +479,7 @@ namespace LoveLetter.UI.Forms
                     throw new NullReferenceException(nameof(player));
                 }
 
+                gameState = GameState.Fetch(gameState.Id, ApplicationState.Instance.Connection);
                 var opponent = gameState.Players.FirstOrDefault(p => p.PlayerNumber == e.PlayerNumber);
 
                 if (opponent is not null)
@@ -479,9 +500,15 @@ namespace LoveLetter.UI.Forms
                     if (opponent.CurrentCard == CardType.Princess)
                     {
                         gameState.Lose(opponent);
+                        lobby.Leave(opponent.Nickname);
+                    }
+                    else
+                    {
+                        opponent.CurrentCard = gameState.TakeCard(opponent);
                     }
                 }
 
+                gameState = GameState.Fetch(gameState.Id, ApplicationState.Instance.Connection);
                 if (AdditionalCard is not null && SelectedCard == InitialCard)
                 {
                     gameState.EndTurn(AdditionalCard);
@@ -522,6 +549,7 @@ namespace LoveLetter.UI.Forms
                     gameState.Save((nameof(GameState.Players), gameState.Players));
                 }
 
+                gameState = GameState.Fetch(gameState.Id, ApplicationState.Instance.Connection);
                 if (AdditionalCard is not null && SelectedCard == InitialCard)
                 {
                     gameState.EndTurn(AdditionalCard);
@@ -547,7 +575,8 @@ namespace LoveLetter.UI.Forms
 
                 if (lobby is null)
                 {
-                    throw new NullReferenceException(nameof(lobby));
+                    Close();
+                    return;
                 }
 
                 if (gameState is null)
@@ -560,6 +589,7 @@ namespace LoveLetter.UI.Forms
                     throw new NullReferenceException(nameof(player));
                 }
 
+                gameState = GameState.Fetch(gameState.Id, ApplicationState.Instance.Connection);
                 var opponent = gameState.Players.FirstOrDefault(p => p.PlayerNumber == e.PlayerNumber);
 
                 if (opponent is not null)
@@ -588,6 +618,7 @@ namespace LoveLetter.UI.Forms
                     }
                 }
 
+                gameState = GameState.Fetch(gameState.Id, ApplicationState.Instance.Connection);
                 if (AdditionalCard is not null && SelectedCard == InitialCard)
                 {
                     gameState.EndTurn(AdditionalCard);
@@ -620,6 +651,7 @@ namespace LoveLetter.UI.Forms
                     throw new NullReferenceException(nameof(player));
                 }
 
+                gameState = GameState.Fetch(gameState.Id, ApplicationState.Instance.Connection);
                 var opponent = gameState.Players.FirstOrDefault(p => p.PlayerNumber == e.PlayerNumber);
 
                 if (opponent is not null)
@@ -640,6 +672,7 @@ namespace LoveLetter.UI.Forms
                     this.AlertMessage($"You revealed opponents`s card. His card type is {opponent.CurrentCard}");
                 }
 
+                gameState = GameState.Fetch(gameState.Id, ApplicationState.Instance.Connection);
                 if (AdditionalCard is not null && SelectedCard == InitialCard)
                 {
                     gameState.EndTurn(AdditionalCard);
@@ -673,17 +706,11 @@ namespace LoveLetter.UI.Forms
                     throw new NullReferenceException(nameof(player));
                 }
 
+                gameState = GameState.Fetch(gameState.Id, ApplicationState.Instance.Connection);
                 var opponent = gameState.Players.FirstOrDefault(p => p.PlayerNumber == e.PlayerNumber);
-
                 
                 if (opponent is not null)
                 {
-                    if (opponent.PlayerNumber == player.PlayerNumber)
-                    {
-                        this.ThrowIssue("You cannot choose yourself when playing " + CardType.Guard.ToString());
-                        return;
-                    }
-
                     opponent = FindOpponent(gameState, player, opponent);
 
                     if (opponent is null)
@@ -701,14 +728,11 @@ namespace LoveLetter.UI.Forms
                     {
                         gameState.Win(player.PlayerNumber);
                         this.CongratulationMessage();
-
-                        if (ApplicationState.Instance.ApplicationEvents is not null)
-                        {
-                            ApplicationState.Instance.ApplicationEvents.OnGameStoppedHandler(e);
-                        }
+                        Close();
                     }
                     else
                     {
+                        gameState = GameState.Fetch(gameState.Id, ApplicationState.Instance.Connection);
                         if (AdditionalCard is not null && SelectedCard == InitialCard)
                         {
                             gameState.EndTurn(AdditionalCard);
@@ -728,6 +752,11 @@ namespace LoveLetter.UI.Forms
 
         private Player? FindOpponent(GameState gameState, Player player, Player opponent)
         {
+            if (player.PlayerNumber == opponent.PlayerNumber)
+            {
+                return null;
+            }
+
             while (!opponent.Available)
             {
                 if (!gameState.Players.Any(p => p.Available && p.PlayerNumber != player.PlayerNumber))
@@ -778,7 +807,8 @@ namespace LoveLetter.UI.Forms
 
                 if (lobby is null)
                 {
-                    throw new NullReferenceException(nameof(lobby));
+                    Close();
+                    return;
                 }
 
                 if (gameState is null)
@@ -794,11 +824,7 @@ namespace LoveLetter.UI.Forms
                 gameState.Lose(player);
                 lobby.Leave(player.Nickname);
                 this.AlertMessage($"You are kicked for being afk for {TimeSpan.FromMilliseconds(AfkTimer.Interval).Minutes} minutes!");
-
-                if (ApplicationState.Instance.ApplicationEvents is not null)
-                {
-                    ApplicationState.Instance.ApplicationEvents.OnGameStoppedHandler(e);
-                }
+                Close();
             }
             catch (Exception ex)
             {
@@ -811,18 +837,30 @@ namespace LoveLetter.UI.Forms
             try
             {
                 var gameState = ApplicationState.Instance.CurrentGameState;
+                var player = ApplicationState.Instance.CurrentPlayer;
 
                 if (gameState is null)
                 {
                     throw new NullReferenceException(nameof(gameState));
                 }
 
+                if (player is null)
+                {
+                    throw new NullReferenceException(nameof(player));
+                }
+
+                if ((short)PlayerNumberValue.Value == player.PlayerNumber)
+                {
+                    this.AlertMessage("If you choose yourself there wouldn`t be any effects!");
+                    return;
+                }
+
                 var opponents = gameState.Players.Where(p => p.Available);
 
                 if (!opponents.Any(o => o.PlayerNumber == (short)PlayerNumberValue.Value))
                 {
-                    this.AlertMessage("You cannot choose this player because he used " + CardType.Handmaid.ToString());
-                    PlayerNumberValue.Value = PlayerNumberValue.Minimum;
+                    this.AlertMessage("If you choose this player, he/she wouldn`t be affected somehow becaue of " + CardType.Handmaid.ToString());
+                    return;
                 }
             }
             catch (Exception ex)
@@ -848,13 +886,15 @@ namespace LoveLetter.UI.Forms
                     throw new NullReferenceException(nameof(player));
                 }
 
+                gameState = GameState.Fetch(gameState.Id, ApplicationState.Instance.Connection);
+
                 AuditGrid.DataSource = DataGridUtils.LoadAudit(gameState.Id, ApplicationState.Instance.Connection);
                 AuditGrid.Update();
                 AuditGrid.Refresh();
 
                 RefreshCardHistory(gameState);
 
-                CardsCount.Text = (Constraints.INITIAL_CARDS_COUNT - gameState.CardHistory.Cards.Count() - 3).ToString();
+                CardsCount.Text = GetCardsCount(gameState).ToString();
             }
             catch (Exception ex)
             {
@@ -868,7 +908,7 @@ namespace LoveLetter.UI.Forms
 
             foreach (var card in gameState.CardHistory.Cards)
             {
-                CardHistoryListBox.Items.Add($"{gameState.CardHistory.Cards.ToList().IndexOf(card) + 1}: {card.CardType} was played");
+                CardHistoryListBox.Items.Add($"{card.CardType} was played");
             }
         }
     }

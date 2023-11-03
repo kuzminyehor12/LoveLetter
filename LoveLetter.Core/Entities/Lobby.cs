@@ -9,7 +9,7 @@ namespace LoveLetter.Core.Entities
 {
     public class Lobby : DomainEntity
     {
-        private ISqlDataAdapter _adapter = new LobbySqlAdapter();
+        private DomainSqlDataAdapter _adapter = new LobbySqlAdapter();
 
         public Guid Id { get; private set; }
 
@@ -29,7 +29,7 @@ namespace LoveLetter.Core.Entities
             }
         }
 
-        public Lobby UseAdapter(ISqlDataAdapter adapter)
+        public Lobby UseAdapter(DomainSqlDataAdapter adapter)
         {
             _adapter = adapter;
             return this;

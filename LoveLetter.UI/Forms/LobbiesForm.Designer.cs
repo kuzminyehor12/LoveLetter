@@ -28,11 +28,13 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.LobbiesGrid = new System.Windows.Forms.DataGridView();
             this.NicknameValue = new System.Windows.Forms.TextBox();
             this.NicknameLabel = new System.Windows.Forms.Label();
             this.CreateLobbyBtn = new System.Windows.Forms.Button();
             this.RefreshIcon = new System.Windows.Forms.PictureBox();
+            this.LobbiesTimer = new System.Windows.Forms.Timer(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.LobbiesGrid)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.RefreshIcon)).BeginInit();
             this.SuspendLayout();
@@ -97,6 +99,12 @@
             this.RefreshIcon.TabStop = false;
             this.RefreshIcon.Click += new System.EventHandler(this.RefreshIcon_Click);
             // 
+            // LobbiesTimer
+            // 
+            this.LobbiesTimer.Enabled = true;
+            this.LobbiesTimer.Interval = 5000;
+            this.LobbiesTimer.Tick += new System.EventHandler(this.LobbiesTimer_Tick);
+            // 
             // LobbiesForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
@@ -126,5 +134,6 @@
         private Label NicknameLabel;
         private Button CreateLobbyBtn;
         private PictureBox RefreshIcon;
+        private System.Windows.Forms.Timer LobbiesTimer;
     }
 }

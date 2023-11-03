@@ -386,7 +386,7 @@
             // 
             // PollingTimer
             // 
-            this.PollingTimer.Interval = 10000;
+            this.PollingTimer.Interval = 5000;
             this.PollingTimer.Tick += new System.EventHandler(this.PollingTimer_Tick);
             // 
             // AfkTimer

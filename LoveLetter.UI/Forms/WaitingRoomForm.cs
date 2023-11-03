@@ -25,10 +25,10 @@ namespace LoveLetter.UI.Forms
                 _yourPlayerNumber = value;
             }
         }
-        public WaitingRoomForm(string playerNickname, short yourPlayerNumber)
+        public WaitingRoomForm(string playerNickname, bool isHost, short yourPlayerNumber)
         {
             YourPlayerNumber = yourPlayerNumber;
-            ApplicationState.Instance.CurrentPlayer = new Player(yourPlayerNumber, playerNickname);
+            ApplicationState.Instance.CurrentPlayer = new Player(yourPlayerNumber, isHost, playerNickname);
             ApplicationState.Instance.ApplicationEvents.OnGameStopped += ApplicationEvents_WaitingRoom_OnGameStopped;
             InitializeComponent();
         }
@@ -122,6 +122,14 @@ namespace LoveLetter.UI.Forms
 
         private void WaitingRoomForm_Load(object sender, EventArgs e)
         {
+            if (ApplicationState.Instance.CurrentPlayer is null || !ApplicationState.Instance.CurrentPlayer.IsHost)
+            {
+                GameStartBtn.Enabled = false;
+                GameStartTooltip.SetToolTip(GameStartBtn, "Wait for host to start game!");
+            }
+
+            GameStartTooltip.SetToolTip(GameStartBtn, "Press to start game!");
+
             RefreshPlayersList();
         }
 
@@ -186,7 +194,7 @@ namespace LoveLetter.UI.Forms
                 }
 
                 GameStartTimer.Stop();
-
+                Thread.Sleep(500);
                 ApplicationState.Instance.CurrentGameState = GameState.Fetch(lobby.Id, ApplicationState.Instance.Connection);
 
                 GameStartTimer.Enabled = false;

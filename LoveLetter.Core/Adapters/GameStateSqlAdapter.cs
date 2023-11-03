@@ -1,24 +1,23 @@
 ﻿using LoveLetter.Core.Entities;
 using LoveLetter.Core.Utils;
 using Microsoft.Data.SqlClient;
+using System.Data;
 
 namespace LoveLetter.Core.Adapters
 {
-    public class GameStateSqlAdapter : ISqlDataAdapter
+    public class GameStateSqlAdapter : DomainSqlDataAdapter
     {
-        public SqlConnection Connection { get; }
-
-        public GameStateSqlAdapter()
+        public GameStateSqlAdapter() : base()
         {
-            Connection = new SqlConnection(ConfigurationUtils.GetConnectionString());
+
         }
 
-        public GameStateSqlAdapter(SqlConnection connection)
+        public GameStateSqlAdapter(SqlConnection connection) : base(connection)
         {
-            Connection = connection;
+
         }
 
-        public DomainEntity Populate(string command)
+        public override DomainEntity Populate(string command)
         {
             using (var cmd = Connection.CreateCommand())
             {
@@ -28,15 +27,6 @@ namespace LoveLetter.Core.Adapters
                 {
                     return new GameState(reader);
                 }
-            }
-        }
-
-        public void SaveChanges(string command)
-        {
-            using (var cmd = Connection.CreateCommand())
-            {
-                cmd.CommandText = command;
-                cmd.ExecuteNonQuery();
             }
         }
     }

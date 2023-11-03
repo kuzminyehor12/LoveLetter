@@ -11,7 +11,7 @@ namespace LoveLetter.Core.Entities
 {
     public class GameState : DomainEntity
     {
-        private ISqlDataAdapter _adapter = new GameStateSqlAdapter();
+        private DomainSqlDataAdapter _adapter = new GameStateSqlAdapter();
 
         public Guid Id { get; private set; }
 
@@ -30,6 +30,8 @@ namespace LoveLetter.Core.Entities
 
         public Deck CardHistory { get; private set; }
 
+        public bool Locked { get; private set; }
+
         public GameState(SqlDataReader reader)
         {
             if (reader.Read())
@@ -43,6 +45,7 @@ namespace LoveLetter.Core.Entities
                 StartDate = reader.GetDateTime(5);
                 EndDate = reader.IsDBNull(6) ? null : reader.GetDateTime(6);
                 CardHistory = string.IsNullOrEmpty(reader.GetString(7)) ? new Deck() : new Deck(reader.GetString(7).Split(',').Select(cardType => short.Parse(cardType)));
+                Locked = reader.GetBoolean(8);
             }
             else
             {
@@ -50,7 +53,7 @@ namespace LoveLetter.Core.Entities
             }
         }
 
-        public GameState UseAdapter(ISqlDataAdapter adapter)
+        public GameState UseAdapter(DomainSqlDataAdapter adapter)
         {
             _adapter = adapter;
             return this;
@@ -84,6 +87,22 @@ namespace LoveLetter.Core.Entities
             }
         }
 
+        public bool Save(SqlTransaction transaction, params (string ColumnName, object ColumnValue)[] columns)
+        {
+            try
+            {
+                var stringValues = ParseUtils.ParseValues(columns);
+                var command = GameStateQuery.UpdateColumns(Id, stringValues.ToArray());
+                _adapter.SaveChanges(command, transaction);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+
         public bool Save(params (string ColumnName, object ColumnValue)[] columns)
         {
             try
@@ -105,22 +124,30 @@ namespace LoveLetter.Core.Entities
         public Card TakeCard(Player player)
         {
             var card = Deck.Dequeue();
+            Save((nameof(Locked), true));
 
             if (player is not null)
             {
-                var playerToUpdate = Players.FirstOrDefault(p => p.Nickname == player.Nickname);
+                var playerToUpdate = Players.FirstOrDefault(p => p.PlayerNumber == player.PlayerNumber);
                 if (playerToUpdate is not null)
                 {
-                    playerToUpdate.CurrentCard = card;
-                    var resultOk = Save((nameof(Deck), Deck), (nameof(Players), Players));
-
-                    if (resultOk)
+                    var updatePlayerCard = (SqlTransaction transaction) =>
                     {
-                        AuditItem.Append(Id, player, nameof(TakeCard), _adapter.Connection);
-                    }
+                        playerToUpdate.CurrentCard = card;
+                        playerToUpdate.Available = true;
+                        var resultOk = Save(transaction, (nameof(Deck), Deck), (nameof(Players), Players));
+
+                        if (resultOk)
+                        {
+                            AuditItem.Append(Id, player, nameof(TakeCard), _adapter.Connection, transaction);
+                        }
+                    };
+
+                    _adapter.DoAsTransaction(updatePlayerCard, IsolationLevel.ReadCommitted);
                 }
             }
-            
+
+            Save((nameof(Locked), false));
             return card;
         }
 
@@ -145,12 +172,17 @@ namespace LoveLetter.Core.Entities
 
         public void Lose(Player loser)
         {
-            Players.Remove(loser);
-            var resultOk = Save((nameof(Players), Players));
+            var playerToRemove = Players.FirstOrDefault(p => loser.PlayerNumber == p.PlayerNumber);
 
-            if (resultOk)
+            if (playerToRemove is not null)
             {
-                AuditItem.Append(Id, loser, nameof(Lose), _adapter.Connection);
+                Players.Remove(playerToRemove);
+                var resultOk = Save((nameof(Players), Players));
+
+                if (resultOk)
+                {
+                    AuditItem.Append(Id, loser, nameof(Lose), _adapter.Connection);
+                }
             }
         }
 

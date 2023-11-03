@@ -6,7 +6,11 @@ namespace LoveLetter.UI.Infrastructure
     public static class FormExtensions
     {
         public static void ThrowError(this Form form, Exception ex) => 
-             MessageBox.Show(ex.StackTrace, ex.Message, MessageBoxButtons.OK, MessageBoxIcon.Error);
+             MessageBox.Show(
+                 ex.StackTrace, 
+                 ex.Message, 
+                 MessageBoxButtons.OK,
+                 MessageBoxIcon.Error);
 
         public static void ThrowIssue(this Form form, string message) =>
              MessageBox.Show(

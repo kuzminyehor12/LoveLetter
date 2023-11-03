@@ -64,23 +64,8 @@ namespace LoveLetter.UI.Infrastructure
             return audit;
 
             string CreateAuditItem(SqlDataReader reader) =>
-                reader.IsDBNull(4) ? string.Empty : reader.GetString(4) + $" by player {reader.GetInt16(3)}({reader.GetString(2)}) at {reader.GetDateTime(5)}";
-        }
-
-        public static List<string> LoadCardHistory(DataTable audit, ref int cardsLeft)
-        {
-            List<string> cardHistory = new List<string>();
-
-            foreach (var item in audit.Rows)
-            {
-                if (!string.IsNullOrEmpty(item.ToString()) && item.ToString().Contains(nameof(GameState.TakeCard)))
-                {
-                    cardHistory.Add(item.ToString());
-                    cardsLeft--;
-                }
-            }
-
-            return cardHistory;
+                reader.IsDBNull(4) ? string.Empty : 
+                    reader.GetString(4) + $" by player {reader.GetInt16(3)}({reader.GetString(2)}) at {reader.GetDateTime(5)}";
         }
     }
 }

@@ -34,6 +34,7 @@
             this.PollingTimer = new System.Windows.Forms.Timer(this.components);
             this.WaitingRoomListBox = new System.Windows.Forms.ListBox();
             this.GameStartTimer = new System.Windows.Forms.Timer(this.components);
+            this.GameStartTooltip = new System.Windows.Forms.ToolTip(this.components);
             this.SuspendLayout();
             // 
             // GameStartBtn
@@ -105,5 +106,6 @@
         private System.Windows.Forms.Timer PollingTimer;
         private ListBox WaitingRoomListBox;
         private System.Windows.Forms.Timer GameStartTimer;
+        private ToolTip GameStartTooltip;
     }
 }

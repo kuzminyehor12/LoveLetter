@@ -43,16 +43,24 @@ namespace LoveLetter.Core.Entities
         [XmlElement("PlayerAvailable")]
         public bool Available { get; set; } = true;
 
+        [XmlIgnore]
+        public bool IsHost { get; set; } = false;
+
         public Player()
         {
             Available = true;
             CurrentCard = CardType.Unknown;
         }
 
-        public Player(short playerNumber, string nickName)
+        public Player(short playerNumber, string nickName) : this()
         {
             PlayerNumber = playerNumber;
             Nickname = nickName;
+        }
+
+        public Player(short playerNumber, bool isHost, string nickName) : this(playerNumber, nickName)
+        {
+            IsHost = isHost;
         }
     }
 }
