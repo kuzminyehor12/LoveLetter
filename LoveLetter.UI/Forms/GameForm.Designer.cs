@@ -97,8 +97,8 @@
             // GameSplitContainer.Panel2
             // 
             this.GameSplitContainer.Panel2.Controls.Add(this.AuditTabControl);
-            this.GameSplitContainer.Size = new System.Drawing.Size(1013, 447);
-            this.GameSplitContainer.SplitterDistance = 707;
+            this.GameSplitContainer.Size = new System.Drawing.Size(1105, 447);
+            this.GameSplitContainer.SplitterDistance = 709;
             this.GameSplitContainer.SplitterWidth = 3;
             this.GameSplitContainer.TabIndex = 0;
             // 
@@ -106,7 +106,7 @@
             // 
             this.CardsLeftLabel.AutoSize = true;
             this.CardsLeftLabel.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.CardsLeftLabel.Location = new System.Drawing.Point(437, 9);
+            this.CardsLeftLabel.Location = new System.Drawing.Point(458, 9);
             this.CardsLeftLabel.Name = "CardsLeftLabel";
             this.CardsLeftLabel.Size = new System.Drawing.Size(98, 28);
             this.CardsLeftLabel.TabIndex = 10;
@@ -116,7 +116,7 @@
             // 
             this.CardsCount.AutoSize = true;
             this.CardsCount.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.CardsCount.Location = new System.Drawing.Point(553, 9);
+            this.CardsCount.Location = new System.Drawing.Point(562, 9);
             this.CardsCount.Name = "CardsCount";
             this.CardsCount.Size = new System.Drawing.Size(23, 28);
             this.CardsCount.TabIndex = 9;
@@ -138,7 +138,7 @@
             this.AdditionalCardPicture.Location = new System.Drawing.Point(385, 185);
             this.AdditionalCardPicture.Margin = new System.Windows.Forms.Padding(2);
             this.AdditionalCardPicture.Name = "AdditionalCardPicture";
-            this.AdditionalCardPicture.Size = new System.Drawing.Size(150, 253);
+            this.AdditionalCardPicture.Size = new System.Drawing.Size(150, 218);
             this.AdditionalCardPicture.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.AdditionalCardPicture.TabIndex = 7;
             this.AdditionalCardPicture.TabStop = false;
@@ -190,6 +190,7 @@
             0,
             0,
             0});
+            this.PlayerValueValue.ValueChanged += new System.EventHandler(this.PlayerValueValue_ValueChanged);
             // 
             // PlayerNumberLabel
             // 
@@ -240,10 +241,11 @@
             // 
             // InitialCardPicture
             // 
+            this.InitialCardPicture.Image = global::LoveLetter.UI.Properties.Resources.Guard;
             this.InitialCardPicture.Location = new System.Drawing.Point(208, 185);
             this.InitialCardPicture.Margin = new System.Windows.Forms.Padding(2);
             this.InitialCardPicture.Name = "InitialCardPicture";
-            this.InitialCardPicture.Size = new System.Drawing.Size(150, 253);
+            this.InitialCardPicture.Size = new System.Drawing.Size(150, 218);
             this.InitialCardPicture.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.InitialCardPicture.TabIndex = 0;
             this.InitialCardPicture.TabStop = false;
@@ -258,7 +260,7 @@
             this.AuditTabControl.Margin = new System.Windows.Forms.Padding(2);
             this.AuditTabControl.Name = "AuditTabControl";
             this.AuditTabControl.SelectedIndex = 0;
-            this.AuditTabControl.Size = new System.Drawing.Size(298, 445);
+            this.AuditTabControl.Size = new System.Drawing.Size(391, 445);
             this.AuditTabControl.TabIndex = 0;
             // 
             // AuditPage
@@ -268,7 +270,7 @@
             this.AuditPage.Margin = new System.Windows.Forms.Padding(2);
             this.AuditPage.Name = "AuditPage";
             this.AuditPage.Padding = new System.Windows.Forms.Padding(2);
-            this.AuditPage.Size = new System.Drawing.Size(290, 412);
+            this.AuditPage.Size = new System.Drawing.Size(383, 412);
             this.AuditPage.TabIndex = 0;
             this.AuditPage.Text = "Audit";
             this.AuditPage.UseVisualStyleBackColor = true;
@@ -282,7 +284,7 @@
             this.AuditGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("Segoe UI", 6F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.ControlText;
             dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
             dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
@@ -293,7 +295,7 @@
             this.AuditGrid.ReadOnly = true;
             this.AuditGrid.RowHeadersWidth = 51;
             this.AuditGrid.RowTemplate.Height = 29;
-            this.AuditGrid.Size = new System.Drawing.Size(288, 407);
+            this.AuditGrid.Size = new System.Drawing.Size(383, 407);
             this.AuditGrid.TabIndex = 0;
             // 
             // CardHistoryPage
@@ -303,7 +305,7 @@
             this.CardHistoryPage.Margin = new System.Windows.Forms.Padding(2);
             this.CardHistoryPage.Name = "CardHistoryPage";
             this.CardHistoryPage.Padding = new System.Windows.Forms.Padding(2);
-            this.CardHistoryPage.Size = new System.Drawing.Size(290, 412);
+            this.CardHistoryPage.Size = new System.Drawing.Size(383, 412);
             this.CardHistoryPage.TabIndex = 1;
             this.CardHistoryPage.Text = "Card History";
             this.CardHistoryPage.UseVisualStyleBackColor = true;
@@ -314,7 +316,7 @@
             this.CardHistoryListBox.ItemHeight = 20;
             this.CardHistoryListBox.Location = new System.Drawing.Point(3, 3);
             this.CardHistoryListBox.Name = "CardHistoryListBox";
-            this.CardHistoryListBox.Size = new System.Drawing.Size(286, 404);
+            this.CardHistoryListBox.Size = new System.Drawing.Size(375, 404);
             this.CardHistoryListBox.TabIndex = 0;
             // 
             // Info
@@ -327,7 +329,7 @@
             this.Info.Controls.Add(this.YourNumberLabel);
             this.Info.Location = new System.Drawing.Point(4, 29);
             this.Info.Name = "Info";
-            this.Info.Size = new System.Drawing.Size(290, 412);
+            this.Info.Size = new System.Drawing.Size(383, 412);
             this.Info.TabIndex = 2;
             this.Info.Text = "Your Info";
             this.Info.UseVisualStyleBackColor = true;
@@ -398,7 +400,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1013, 447);
+            this.ClientSize = new System.Drawing.Size(1105, 447);
             this.Controls.Add(this.GameSplitContainer);
             this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "GameForm";

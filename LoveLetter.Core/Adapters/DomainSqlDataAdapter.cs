@@ -11,7 +11,7 @@ namespace LoveLetter.Core.Adapters
 
         public DomainSqlDataAdapter()
         {
-            Connection = new SqlConnection(ConfigurationUtils.GetConnectionString());
+            Connection = new SqlConnection(ConfigurationUtils.GetRemoteConnectionString());
         }
 
         public DomainSqlDataAdapter(SqlConnection connection)

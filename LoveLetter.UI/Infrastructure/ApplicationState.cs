@@ -14,7 +14,6 @@ namespace LoveLetter.UI.Infrastructure
             CurrentGameState = null;
             CardEvents = null;
             ApplicationEvents = new ApplicationEvents();
-            Connection = new SqlConnection(ConfigurationUtils.GetConnectionString());
         }
 
         public static ApplicationState Instance
@@ -40,6 +39,6 @@ namespace LoveLetter.UI.Infrastructure
 
         public ApplicationEvents ApplicationEvents { get; set; }
 
-        public SqlConnection Connection { get; }
+        public SqlConnection Connection { get; set; }
     }
 }

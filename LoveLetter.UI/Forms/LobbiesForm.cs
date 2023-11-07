@@ -2,6 +2,7 @@
 using LoveLetter.Core.Exceptions;
 using LoveLetter.Core.Utils;
 using LoveLetter.UI.Infrastructure;
+using Microsoft.Data.SqlClient;
 
 namespace LoveLetter.UI.Forms
 {
@@ -73,6 +74,7 @@ namespace LoveLetter.UI.Forms
 
         private void LobbiesForm_Load(object sender, EventArgs e)
         {
+            ApplicationState.Instance.Connection = new SqlConnection(ConfigurationUtils.GetRemoteConnectionString());
             ApplicationState.Instance.Connection.Open();
             LobbiesGrid.DataSource = DataGridUtils.GetLobbyDataTable(ApplicationState.Instance.Connection);
         }

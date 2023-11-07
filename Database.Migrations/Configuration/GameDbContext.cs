@@ -11,7 +11,7 @@ namespace Database.Migrations.Configuration
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder
-                .UseSqlServer(ConfigurationUtils.GetConnectionString())
+                .UseSqlServer(ConfigurationUtils.GetRemoteConnectionString())
                 .UseValidationCheckConstraints()
                 .UseEnumCheckConstraints();
         }

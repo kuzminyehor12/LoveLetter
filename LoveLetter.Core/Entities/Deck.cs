@@ -8,6 +8,8 @@ namespace LoveLetter.Core.Entities
 
         public int CardsCount => Cards.Count;
 
+        public bool IsEmpty => Cards.Count == 0;
+
         public Deck()
         {
 

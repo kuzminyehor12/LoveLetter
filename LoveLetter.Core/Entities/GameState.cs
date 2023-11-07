@@ -39,7 +39,8 @@ namespace LoveLetter.Core.Entities
                 var xmlSerializer = new XmlSerializer(typeof(PlayersList));
                 Id = reader.GetGuid(0);
                 Players = xmlSerializer.Deserialize(reader.GetXmlReader(1)) as List<Player> ?? PlayersList.Empty();
-                Deck = new Deck(reader.GetString(2).Split(',').Select(cardType => short.Parse(cardType)));
+                Deck = string.IsNullOrEmpty(reader.GetString(2)) ? new Deck() : 
+                    new Deck(reader.GetString(2).Split(',').Select(cardType => short.Parse(cardType)));
                 TurnPlayerNumber = reader.GetInt16(3);
                 WinnerPlayerNumber = reader.IsDBNull(4) ? null : reader.GetInt16(4);
                 StartDate = reader.GetDateTime(5);
@@ -193,7 +194,7 @@ namespace LoveLetter.Core.Entities
             if (player is not null)
             {
                 player.CurrentCard = new Card(currentCard);
-                if (TurnPlayerNumber == Players.Count)
+                if (TurnPlayerNumber >= Players.Count)
                 {
                     TurnPlayerNumber = 1;
                 }
@@ -218,7 +219,7 @@ namespace LoveLetter.Core.Entities
             opponent = opponentsLeft.ElementAt(new Random().Next(0, opponentsLeft.Count()));
         }
 
-        public void SwapCards(short currentPlayerNumber, Player opponent)
+        public Card SwapCards(short currentPlayerNumber, Player opponent)
         {
             var currentPlayer = Players.FirstOrDefault(p => p.PlayerNumber == currentPlayerNumber);
 
@@ -232,9 +233,12 @@ namespace LoveLetter.Core.Entities
                 if (resultOk)
                 {
                     AuditItem.Append(Id, currentPlayer, nameof(SwapCards), _adapter.Connection);
-                    AuditItem.Append(Id, opponent, nameof(SwapCards), _adapter.Connection);
                 }
+
+                return new Card(currentPlayer.CurrentCard);
             }
+
+            return new Card();
         }
 
         private void ReindexPlayers() =>

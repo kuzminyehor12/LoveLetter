@@ -26,9 +26,9 @@ namespace LoveLetter.UI.Infrastructure
                 MessageBoxButtons.OK, 
                 MessageBoxIcon.Information);
 
-        public static void SendResultMessage(this Form form, short winnerPlayerNumber) =>
+        public static void SendResultMessage(this Form form, string nickname) =>
            MessageBox.Show(
-               $"Player {winnerPlayerNumber} won the game", 
+               $"Player {nickname} won the game", 
                GameMessageType.GAME_RESULT, 
                MessageBoxButtons.OK, 
                MessageBoxIcon.Information);
