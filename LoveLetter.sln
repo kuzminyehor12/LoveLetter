@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Database.Migrations", "Data
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LoveLetter.Core", "LoveLetter.Core\LoveLetter.Core.csproj", "{081F2BEB-A405-4742-AC9C-79C8EC6524EF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoveLetter.UI", "LoveLetter.UI\LoveLetter.UI.csproj", "{49EC14CF-FF3B-405E-98E8-A7C09BD08491}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LoveLetter.UI", "LoveLetter.UI\LoveLetter.UI.csproj", "{49EC14CF-FF3B-405E-98E8-A7C09BD08491}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

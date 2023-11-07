@@ -4,27 +4,23 @@ namespace LoveLetter.Core.Queries
 {
     public static class GameStateQuery
     {
-        public static string SelectById(Guid lobbyId) => $"SELECT * FROM {Tables.States} WHERE Id={lobbyId}";
+        public static string SelectById(Guid lobbyId) => $"SELECT * FROM {Tables.States} WITH (ROWLOCK) WHERE Id='{lobbyId}' AND Locked<>1";
 
-        public static string Update(Guid lobbyId, string deckJson, string playersJson, short turnPlayerNumber) => 
-            $"UPDATE {Tables.States} SET Deck={deckJson}, Players={playersJson}, TurnPlayerNumber={turnPlayerNumber} " +
-            $"WHERE Id={lobbyId}";
+        public static string UpdateColumn(Guid lobbyId, (string ColumnName, string ColumnValue) column) =>
+            $"UPDATE {Tables.States} SET {column.ColumnName}='{column.ColumnValue}' WHERE Id='{lobbyId}'";
 
-        public static string UpdateColumn<T>(Guid lobbyId, T column) =>
-            $"UPDATE {Tables.States} SET {nameof(column)}={column} WHERE Id={lobbyId}";
-
-        public static string UpdateColumns(Guid lobbyId, params string[] columns)
+        public static string UpdateColumns(Guid lobbyId, params (string ColumnName, string ColumnValue)[] columns)
         {
-            var query = $"UPDATE {Tables.States} SET ";
+            var query = $"UPDATE {Tables.States} WITH (ROWLOCK) SET ";
 
             foreach (var column in columns)
             {
-                query += $"{nameof(column)}={column},";
+                query += $"{column.ColumnName}='{column.ColumnValue}',";
             }
 
             query = query.TrimEnd(',');
 
-            query += $" WHERE Id={lobbyId}";
+            query += $" WHERE Id='{lobbyId}'";
             return query;
         }
     }

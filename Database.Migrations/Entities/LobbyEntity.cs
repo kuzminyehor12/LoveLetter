@@ -8,6 +8,6 @@ namespace Database.Migrations.Entities
 
         public LobbyStatus Status { get; set; }
 
-        public string[] Players { get; set; } = Array.Empty<string>();
+        public string Players { get; set; } = string.Empty;
     }
 }

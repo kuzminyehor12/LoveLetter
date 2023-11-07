@@ -1,25 +1,28 @@
-﻿using Newtonsoft.Json.Linq;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+﻿using LoveLetter.Core.Utils;
 
 namespace LoveLetter.Core.Entities
 {
     public class Deck : DomainEntity
     {
-        [JsonPropertyName("Cards")]
         public Queue<Card> Cards { get; private set; } = new Queue<Card>();
 
-        [JsonPropertyName("Count")]
-        public int CardsCount { get; private set;  }
+        public int CardsCount => Cards.Count;
 
-        public static Deck Populate(string json)
+        public bool IsEmpty => Cards.Count == 0;
+
+        public Deck()
         {
-            var jsonObject = JObject.Parse(json);
-            return new Deck
-            {
-                Cards = jsonObject["Cards"]?.ToObject<Queue<Card>>() ?? new Queue<Card>(),
-                CardsCount = jsonObject["Count"]?.Value<int>() ?? 0
-            };
+
+        }
+
+        public Deck(IEnumerable<short> cardTypes)
+        {
+            Cards = new Queue<Card>(cardTypes.Select(type => new Card((CardType)type)));
+        }
+
+        public void Enqueue(Card card)
+        {
+            Cards.Enqueue(card);
         }
 
         public Card Dequeue()

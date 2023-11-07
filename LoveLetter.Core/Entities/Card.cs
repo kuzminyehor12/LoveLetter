@@ -45,5 +45,29 @@ namespace LoveLetter.Core.Entities
         }
 
         public static implicit operator CardType(Card card) => card.CardType;
+
+        public static bool operator <(Card card1, Card card2) => card1.CardType < card2.CardType;
+
+        public static bool operator >(Card card1, Card card2) => card1.CardType > card2.CardType;
+
+        public static bool operator ==(Card card1, Card card2) => card1.CardType == card2.CardType;
+
+        public static bool operator !=(Card card1, Card card2) => card1.CardType != card2.CardType;
+
+        public static bool operator <=(Card card1, Card card2) => card1.CardType <= card2.CardType;
+
+        public static bool operator >=(Card card1, Card card2) => card1.CardType <= card2.CardType;
+
+        public override bool Equals(object? obj)
+        {
+            if (obj is null)
+            {
+                return false;
+            }
+
+            return this == (Card)obj;
+        }
+
+        public override int GetHashCode() => CardType.GetHashCode();
     }
 }

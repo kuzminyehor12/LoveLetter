@@ -1,18 +1,19 @@
 ﻿using Database.Migrations.Entities;
 using Microsoft.EntityFrameworkCore;
 using LoveLetter.Core.Constants;
+using LoveLetter.Core.Utils;
+using System.Data;
 
 namespace Database.Migrations.Configuration
 {
     public class GameDbContext : DbContext
     {
-        public DbSet<GameStateEntity> Games { get; set; }
-
-        public DbSet<LobbyEntity> Lobbies { get; set; }
-
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            base.OnConfiguring(optionsBuilder);
+            optionsBuilder
+                .UseSqlServer(ConfigurationUtils.GetRemoteConnectionString())
+                .UseValidationCheckConstraints()
+                .UseEnumCheckConstraints();
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -32,9 +33,14 @@ namespace Database.Migrations.Configuration
               .HasKey(e => e.Id);
 
             modelBuilder.Entity<GameStateEntity>()
+              .Property(e => e.Players)
+              .HasColumnType("Xml");
+
+            modelBuilder.Entity<GameStateEntity>()
               .HasOne(e => e.Lobby)
               .WithOne(e => e.State)
               .HasForeignKey<GameStateEntity>(e => e.Id)
+              .OnDelete(DeleteBehavior.Cascade)
               .HasConstraintName("FK_LobbyState")
               .IsRequired();
 
@@ -48,6 +54,7 @@ namespace Database.Migrations.Configuration
               .HasOne(e => e.GameState)
               .WithMany(e => e.AuditItems)
               .HasForeignKey(e => e.GameStateId)
+              .OnDelete(DeleteBehavior.Cascade)
               .HasConstraintName("FK_StateAuditItems")
               .IsRequired();
         }
